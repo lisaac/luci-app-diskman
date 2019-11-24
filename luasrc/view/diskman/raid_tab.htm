@@ -1,0 +1,22 @@
+<br>
+<ul class="cbi-tabmenu">
+	<li id="cbi-tab-raid"><a id="a-cbi-tab-raid" href=""><%:Raid%></a></li>
+	<li id="cbi-tab-mergerfs"><a id="a-cbi-tab-mergerfs" href=""><%:Mergerfs%></a></li>
+	<li id="cbi-tab-btrfs"><a id="a-cbi-tab-btrfs" href=""><%:Btrfs%></a></li>
+</ul>
+
+<script type="text/javascript">
+	let re = /\/admin\/system\/diskman/
+	let p = window.location.href
+	let path = p.split(re)
+	let action = path[1] && path[1].split('/')[2] || "raid"
+	let actions=["raid","mergerfs","btrfs"]
+	actions.forEach(function(item) {
+		document.getElementById("a-cbi-tab-" + item).href= path[0]+"/admin/system/diskman/disk/"+item
+		if (action === item) {
+			document.getElementById("cbi-tab-" + item).className="cbi-tab"
+		}	else {
+			document.getElementById("cbi-tab-" + item).className="cbi-tab-disable"
+		}
+	})
+</script>
