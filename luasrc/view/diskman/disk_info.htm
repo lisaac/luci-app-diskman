@@ -4,21 +4,21 @@ window.onload=function(){
   lines.forEach((item) => {
     let dev = item.id.match(/cbi-disk-(.*)/)[1]
     if(dev == "table"){ return }
-    XHR.get('/cgi-bin/luci/admin/system/diskman/get_device_info/' + dev, null, (x,d_info) => {
+    XHR.get('/cgi-bin/luci/admin/system/diskman/get_disk_info/' + dev, null, (x,disk_info) => {
       item.childNodes.forEach((cell)=>{
         if(cell && cell.attributes){
           if(cell.getAttribute("data-name") == "sn"){
-            cell.innerText=d_info.device_info.sn
+            cell.innerText=disk_info.sn
           }else if (cell.getAttribute("data-name") == "temp"){
-            cell.innerText=d_info.device_info.temp || "-"
+            cell.innerText=disk_info.temp || "-"
           }else if (cell.getAttribute("data-name") == "p_table"){
-            cell.innerText=d_info.device_info.p_table
+            cell.innerText=disk_info.p_table
           }else if (cell.getAttribute("data-name") == "sata_ver"){
-            cell.innerText=d_info.device_info.sata_ver
+            cell.innerText=disk_info.sata_ver
           }else if (cell.getAttribute("data-name") == "health"){
-            cell.innerText=d_info.device_info.health
+            cell.innerText=disk_info.health
           }else if (cell.getAttribute("data-name") == "status"){
-            cell.innerText=d_info.device_info.status
+            cell.innerText=disk_info.status
           }
         }
       })

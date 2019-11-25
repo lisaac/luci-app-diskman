@@ -9,18 +9,54 @@ $Id$
 ]]--
 
 require "luci.util"
+
+local CMD = {"parted", "mdadm", "blkid", "smartctl", "df"}
+
+local d = {command ={}}
+for _, cmd in ipairs(CMD) do
+  local command = luci.sys.exec("/usr/bin/which " .. cmd)
+    d.command[cmd] = command:match("^.+"..cmd) or ""
+end
+
 local host_mounts = nixio.fs.readfile("/hostproc/mounts") or ""
 local mounts = nixio.fs.readfile("/proc/mounts") or ""
 local swaps = nixio.fs.readfile("/proc/swaps") or ""
-local df = luci.sys.exec("df") or ""
+local df = luci.sys.exec(d.command.df) or ""
 
+key = ""
+function d.PrintTable(table , level)
+  level = level or 1
+  local indent = ""
+  for i = 1, level do
+    indent = indent.."  "
+  end
+
+  if key ~= "" then
+    luci.util.perror(indent..key.." ".."=".." ".."{")
+  else
+    luci.util.perror(indent .. "{")
+  end
+
+  key = ""
+  for k,v in pairs(table) do
+     if type(v) == "table" then
+        key = k
+        d.PrintTable(v, level + 1)
+     else
+        local content = string.format("%s%s = %s", indent .. "  ",tostring(k), tostring(v))
+      luci.util.perror(content)  
+      end
+  end
+  luci.util.perror(indent .. "}")
+
+end
 -- Check if it contains nas partition (LABEL=nasetc)
 local isSystemMMC = function(device)
   if not device:match("/dev/mmcblk%S+") then return false end
 
   local ls = io.popen("ls "..device.."p*", "r")
   for partition in ls:lines() do
-    local blkid = io.popen("blkid -s LABEL -o value "..partition, "r")
+    local blkid = io.popen(d.command.blkid .. " -s LABEL -o value "..partition, "r")
     local label = blkid:read("*all"):gsub("([^\n+])\n", "%1")
     blkid:close()
     if label == "nasetc" then
@@ -46,12 +82,12 @@ end
 local get_smart_info = function(device)
   local section
   local smart_info = {}
-  for _, line in ipairs(luci.util.execl("smartctl -H -A -i -n standby -f brief /dev/" .. device)) do
+  for _, line in ipairs(luci.util.execl(d.command.smartctl .. " -H -A -i -n standby -f brief /dev/" .. device)) do
     local attrib, val
     if section == 1 then
-        attrib, val = line:match "^(.-):%s-(.+)"
+        attrib, val = line:match "^(.-):%s+(.+)"
     elseif section == 2 then
-      attrib, val = line:match("^([0-9 ]*) [^ ]* * [POSRCK-]* *[0-9-]* *[0-9-]* *[0-9-]* *[0-9-]* *([0-9-]*)")
+      attrib, val = line:match("^([0-9 ]+)%s+[^ ]+%s+[POSRCK-]+%s+[0-9-]+%s+[0-9-]+%s+[0-9-]+%s+[0-9-]+%s+([0-9-]+)")
       if not smart_info.health then smart_info.health = line:match(".-overall%-health.-: (.+)") end
     else
       attrib = line:match "^=== START OF (.*) SECTION ==="
@@ -145,75 +181,81 @@ end
 
 local get_parted_info = function(device)
   if not device then return end
-  local parted_info = {partition_info={},device_info={}}
-  local device_info_keys = { "path", "size", "type", "logic_sec", "phy_sec", "p_table", "model", "flags" }
-  local partition_info_keys = { "number", "sec_start", "sec_end", "size", "fs", "type", "flags" }
-  local temp_parted_info = {}
-  for _, line in ipairs(luci.util.execl("/usr/sbin/parted -s -m /dev/" .. device .. " unit s print free", "r")) do
+  local result = {partitions={}}
+  local DEVICE_INFO_KEYS = { "path", "size", "type", "logic_sec", "phy_sec", "p_table", "model", "flags" }
+  local PARTITION_INFO_KEYS = { "number", "sec_start", "sec_end", "size", "fs", "type", "flags" }
+  local partition_temp
+  local partitions_temp = {}
+  local disk_temp
+
+  for line in luci.util.execi(d.command.parted .. " -s -m /dev/" .. device .. " unit s print free", "r") do
     if line:find("^/dev/"..device..":.+") then
-      parted_info["device_info"] = parse_parted_info(device_info_keys, line)
-      if parted_info["device_info"]["size"] then
-        local length = parted_info["device_info"]["size"]:gsub("^(%d+)s$", "%1")
-        local newsize = tostring(tonumber(length)*tonumber(parted_info["device_info"]["logic_sec"]))
-        parted_info["device_info"]["size"] = newsize
-        if parted_info["device_info"]["p_table"] == "msdos" then
-          parted_info["device_info"]["p_table"] = "MBR"
-        else
-          parted_info["device_info"]["p_table"] = parted_info["device_info"]["p_table"]:upper()
-        end
+      disk_temp = parse_parted_info(DEVICE_INFO_KEYS, line)
+      disk_temp.partitions = {}
+      if disk_temp["size"] then
+        local length = disk_temp["size"]:gsub("^(%d+)s$", "%1")
+        local newsize = tostring(tonumber(length)*tonumber(disk_temp["logic_sec"]))
+        disk_temp["size"] = newsize
+      end
+      if disk_temp["p_table"] == "msdos" then
+        disk_temp["p_table"] = "MBR"
+      else
+        disk_temp["p_table"] = disk_temp["p_table"]:upper()
       end
     elseif line:find("^%d-:.+") then
-      temp_parted_info = parse_parted_info(partition_info_keys, line)
+      partition_temp = parse_parted_info(PARTITION_INFO_KEYS, line)
       -- use human-readable form instead of sector number
-      if temp_parted_info["size"] then
-        local length = temp_parted_info["size"]:gsub("^(%d+)s$", "%1")
-        local newsize = (tonumber(length) * tonumber(parted_info["device_info"]["logic_sec"]))
-        temp_parted_info["size"] = newsize
-        temp_parted_info["size_formated"] = byte_format(newsize)
+      if partition_temp["size"] then
+        local length = partition_temp["size"]:gsub("^(%d+)s$", "%1")
+        local newsize = (tonumber(length) * tonumber(disk_temp["logic_sec"]))
+        partition_temp["size"] = newsize
+        partition_temp["size_formated"] = byte_format(newsize)
       end
-      if temp_parted_info["fs"] == "free" then
-        temp_parted_info["number"] = "-"
-        temp_parted_info["fs"] = "Free Space"
-        temp_parted_info["name"] = "-"
+      if partition_temp["fs"] == "free" then
+        partition_temp["number"] = "-"
+        partition_temp["fs"] = "Free Space"
+        partition_temp["name"] = "-"
       elseif device:match("sd") or device:match("sata") then
-        temp_parted_info["name"] = device..temp_parted_info["number"]
+        partition_temp["name"] = device..partition_temp["number"]
       elseif device:match("mmcblk") or device:match("md") then
-        temp_parted_info["name"] = device.."p"..temp_parted_info["number"]
+        partition_temp["name"] = device.."p"..partition_temp["number"]
       end
-      temp_parted_info["fs"] = temp_parted_info["fs"] == "" and "raw" or temp_parted_info["fs"]
-      temp_parted_info["sec_start"] = temp_parted_info["sec_start"] and temp_parted_info["sec_start"]:sub(1,-2)
-      temp_parted_info["sec_end"] = temp_parted_info["sec_end"] and temp_parted_info["sec_end"]:sub(1,-2)
-      temp_parted_info["mount_point"] = temp_parted_info["name"]~="-" and get_mount_point(temp_parted_info["name"]) or "-"
-      temp_parted_info["useage"] = temp_parted_info["mount_point"]~="-" and get_partition_useage(temp_parted_info["name"]) or "-"
-      table.insert(parted_info["partition_info"], temp_parted_info)
-      -- parted_info["partition_info"][temp_parted_info["name"]]=temp_parted_info
+      partition_temp["fs"] = partition_temp["fs"] == "" and "raw" or partition_temp["fs"]
+      partition_temp["sec_start"] = partition_temp["sec_start"] and partition_temp["sec_start"]:sub(1,-2)
+      partition_temp["sec_end"] = partition_temp["sec_end"] and partition_temp["sec_end"]:sub(1,-2)
+      partition_temp["mount_point"] = partition_temp["name"]~="-" and get_mount_point(partition_temp["name"]) or "-"
+      partition_temp["useage"] = partition_temp["mount_point"]~="-" and get_partition_useage(partition_temp["name"]) or "-"
+
+      table.insert(partitions_temp, partition_temp)
     end
   end
-  return parted_info
+  result = disk_temp
+  result.partitions = partitions_temp
+
+  return result
 end
 
-local d = {}
-
---[[ return:
-{
-  device_info={ path,model,sn,size,flag,temp,p_table,logic_sec,phy_sec,sata_ver,rota_rate,status,health },
-  partition_info={
-    { number, name, sec_start, sec_end, size, fs, flags },
-    sda1={ number, name, sec_start, sec_end, size, fs, flags, mount_point },
-    ...
+d.get_disk_info = function(device)
+  --[[ return:
+  {
+    path, model, sn, size, size_mounted, flags, type, temp, p_table, logic_sec, phy_sec, sec_size, sata_ver, rota_rate, status, health,
+    partitions = {
+      1 = { number, name, sec_start, sec_end, size, size_mounted, fs, type, flags, mount_point, useage },
+      2 = { number, name, sec_start, sec_end, size, size_mounted, fs, type, flags, mount_point, useage },
+      ...
+    }
   }
-}
---]]
-d.get_device_info = function(device)
+  --]]
   if not device then return end
-  local d_info = get_parted_info(device)
+  local disk_info = get_parted_info(device)
   local smart_info = get_smart_info(device)
+  
   for k, v in pairs(smart_info) do
-    d_info["device_info"][k] = v
+    disk_info[k] = v
   end
-  d_info["device_info"]["sec_size"] = d_info["device_info"]["logic_sec"] .. "/" .. d_info["device_info"]["phy_sec"]
-  d_info["device_info"]["size_formated"] = byte_format(tonumber(d_info["device_info"]["size"]))
-  return d_info
+  disk_info["sec_size"] = disk_info["logic_sec"] .. "/" .. disk_info["phy_sec"]
+  disk_info["size_formated"] = byte_format(tonumber(disk_info["size"]))
+  return disk_info
 end
 
 -- Collect Devices information
@@ -281,7 +323,7 @@ d.get_format_cmd = function()
   for fmt, obj in pairs(AVAILABLE_FMTS) do
     local cmd = luci.sys.exec("/usr/bin/which " .. obj["cmd"])
     if cmd:match(obj["cmd"]) then
-      result[fmt] = { cmd = cmd:sub(1,-2) ,option = obj["option"] }
+      result[fmt] = { cmd = cmd:match("^.+"..obj["cmd"]) ,option = obj["option"] }
     end
   end
   return result

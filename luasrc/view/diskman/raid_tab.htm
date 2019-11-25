@@ -12,7 +12,7 @@
 	let action = path[1] && path[1].split('/')[2] || "raid"
 	let actions=["raid","mergerfs","btrfs"]
 	actions.forEach(function(item) {
-		document.getElementById("a-cbi-tab-" + item).href= path[0]+"/admin/system/diskman/disk/"+item
+		document.getElementById("a-cbi-tab-" + item).href= path[0]+"/admin/system/diskman/disks/"+item
 		if (action === item) {
 			document.getElementById("cbi-tab-" + item).className="cbi-tab"
 		}	else {
