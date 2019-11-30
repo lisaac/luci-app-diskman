@@ -1,0 +1,24 @@
+<script type="text/javascript">//<![CDATA[
+window.onload = function () {
+  const btn_p_table = document.getElementById("cbid.table.1.p_table")
+  const btn_p_table_raw_index = btn_p_table.selectedIndex
+  const val_name = document.getElementById("cbi-table-1-path").innerText.split('/').pop()
+  btn_p_table.onchange = function(){
+    let btn_p_table_index = btn_p_table.selectedIndex
+    if (btn_p_table_index != btn_p_table_raw_index) {
+      if (confirm("Modify the partition table?")) {
+        let p_table = btn_p_table.options[btn_p_table_index].value
+        XHR.get('<%=luci.dispatcher.build_url("admin", "system", "diskman", "mk_p_table")%>', { dev: val_name ,p_table: p_table }, (x, res) => {
+          if (res.code == 0){
+            location.reload();
+          }
+        }
+      );
+      }
+      else {
+      }
+    }
+
+  }
+}
+</script>
