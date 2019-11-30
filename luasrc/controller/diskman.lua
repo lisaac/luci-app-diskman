@@ -69,8 +69,9 @@ function mk_p_table()
     return
   end
   local dm = require "luci.model.diskman"
-  if p_table == "GPT" then
-    local res = luci.sys.call(dm.command.sgdisk .. " -g /dev/" .. dev)
+  if p_table == "GPT" or p_table == "MBR" then
+    p_table = p_table == "MBR" and "msdos" or "gpt"
+    local res = luci.sys.call(dm.command.parted .. " -s /dev/" .. dev .. " mktable ".. p_table)
     if res == 0 then
       luci.http.status(200, "ok")
     else

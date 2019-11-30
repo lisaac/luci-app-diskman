@@ -6,6 +6,5 @@ A Simple Disk Manager for LuCI, support disk partition and format, support raid/
 - blkid
 - mdadm
 - smartmontools
-- sgdisk
 - btrfs-progs
 - e2fsprogs
