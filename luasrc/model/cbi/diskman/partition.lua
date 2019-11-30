@@ -39,9 +39,10 @@ s:option(DummyValue, "temp", translate("Temp"))
 s:option(DummyValue, "sec_size", translate("Sector Size "))
 local dv_p_table = s:option(ListValue, "p_table", translate("Partition Table"))
 dv_p_table.render = function(self, section, scope)
-  if disk_info.p_table ~= "GPT" then
+  if #disk_info.partitions == 0 or (#disk_info.partitions == 1 and disk_info.partitions[1].number == -1) then
     self:value(disk_info.p_table, disk_info.p_table)
     self:value("GPT", "GPT")
+    self:value("MBR", "MBR")
     self.default = disk_info.p_table
     ListValue.render(self, section, scope)
   else
@@ -201,8 +202,8 @@ local btn_action = s_partition_table:option(Button, "_action", translate("Action
 btn_action.forcewrite = true
 btn_action.template = "cbi/disabled_button"
 btn_action.render = function(self, section, scope)
-  -- if partition is mounted or the size < 1mb, then disable the action
-  if disk_info.partitions[section].mount_point ~= "-" or (disk_info.partitions[section].type ~= "extended" and disk_info.partitions[section].size <= 1 * 1024 * 1024) then
+  -- if partition is mounted or the size < 1mb, then disable the add action
+  if disk_info.partitions[section].mount_point ~= "-" or (disk_info.partitions[section].type ~= "extended" and disk_info.partitions[section].number == -1 and disk_info.partitions[section].size <= 1 * 1024 * 1024) then
     self.view_disabled = true
     -- self.inputtitle = ""
     -- self.template = "cbi/dvalue"

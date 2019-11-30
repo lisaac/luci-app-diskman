@@ -6,7 +6,7 @@ window.onload = function () {
   btn_p_table.onchange = function(){
     let btn_p_table_index = btn_p_table.selectedIndex
     if (btn_p_table_index != btn_p_table_raw_index) {
-      if (confirm("Modify the partition table?")) {
+      if (confirm("Warnning !! \nTHIS WILL OVERWRITE EXISTING PARTITIONS!! \nModify the partition table?")) {
         let p_table = btn_p_table.options[btn_p_table_index].value
         XHR.get('<%=luci.dispatcher.build_url("admin", "system", "diskman", "mk_p_table")%>', { dev: val_name ,p_table: p_table }, (x, res) => {
           if (res.code == 0){
