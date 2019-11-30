@@ -16,11 +16,11 @@
             } else if (cell.getAttribute("data-name") == "p_table") {
               cell.innerText = disk_info.p_table
             } else if (cell.getAttribute("data-name") == "sata_ver") {
-              cell.innerText = disk_info.sata_ver
+              cell.innerText = disk_info.sata_ver || "-"
             } else if (cell.getAttribute("data-name") == "health") {
-              cell.innerText = disk_info.health
+              cell.innerText = disk_info.health || "-"
             } else if (cell.getAttribute("data-name") == "status") {
-              cell.innerText = disk_info.status
+              cell.innerText = disk_info.status || "-"
             }
           }
         })

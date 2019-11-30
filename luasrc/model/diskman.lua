@@ -9,8 +9,9 @@ $Id$
 ]]--
 
 require "luci.util"
+local ver = require "luci.version"
 
-local CMD = {"parted", "mdadm", "blkid", "smartctl", "df"}
+local CMD = {"parted", "mdadm", "blkid", "smartctl", "df", "sgdisk"}
 
 local d = {command ={}}
 for _, cmd in ipairs(CMD) do
@@ -18,38 +19,10 @@ for _, cmd in ipairs(CMD) do
     d.command[cmd] = command:match("^.+"..cmd) or ""
 end
 
-local host_mounts = nixio.fs.readfile("/hostproc/mounts") or ""
 local mounts = nixio.fs.readfile("/proc/mounts") or ""
 local swaps = nixio.fs.readfile("/proc/swaps") or ""
 local df = luci.sys.exec(d.command.df) or ""
 
-key = ""
-function d.PrintTable(table , level)
-  level = level or 1
-  local indent = ""
-  for i = 1, level do
-    indent = indent.."  "
-  end
-
-  if key ~= "" then
-    luci.util.perror(indent..key.." ".."=".." ".."{")
-  else
-    luci.util.perror(indent .. "{")
-  end
-
-  key = ""
-  for k,v in pairs(table) do
-     if type(v) == "table" then
-        key = k
-        d.PrintTable(v, level + 1)
-     else
-        local content = string.format("%s%s = %s", indent .. "  ",tostring(k), tostring(v))
-      luci.util.perror(content)  
-      end
-  end
-  luci.util.perror(indent .. "}")
-
-end
 -- Check if it contains nas partition (LABEL=nasetc)
 local isSystemMMC = function(device)
   if not device:match("/dev/mmcblk%S+") then return false end
@@ -143,18 +116,21 @@ local parse_parted_info = function(keys, line)
 end
 
 local get_mount_point = function(partition)
-  -- if use luci-in-dokcer, using parameter "-v /proc:/hostproc" to get the host mount information
-  local mount_point
-  for m in host_mounts:gmatch("/dev/"..partition.." ([^ ]*)") do
-    mount_point = (mount_point and (mount_point .. " ")  or "") .. m
+  local mount_point, dk_root_dir
+  -- if use luci-in-dokcer, exclude the docker overlay mounts
+  
+  if ver.distname == "LuCI in Docker" then
+    local _o, dk = pcall(require,"luci.docker")
+    if _o and dk then
+      dk_root_dir = dk.new():info().body.DockerRootDir
+    end
   end
-  if mount_point then return mount_point end
-  -- if nixio.fs.access("/hostproc/mounts") then
-  --   result = luci.sys.exec('cat /hostproc/mounts | awk \'{if($1=="/dev/'.. partition ..'") print $2}\'')
-  --   if result ~= "" then return result end
-  -- end
+
   for m in mounts:gmatch("/dev/"..partition.." ([^ ]*)") do
-    mount_point = (mount_point and (mount_point .. " ")  or "") .. m
+    if dk_root_dir and m:match("/host" .. dk_root_dir) then
+    else
+      mount_point = (mount_point and (mount_point .. " ")  or "") .. m
+    end
   end
   if mount_point then return mount_point end
   -- result = luci.sys.exec('cat /proc/mounts | awk \'{if($1=="/dev/'.. partition ..'") print $2}\'')
@@ -183,7 +159,7 @@ local get_parted_info = function(device)
   if not device then return end
   local result = {partitions={}}
   local DEVICE_INFO_KEYS = { "path", "size", "type", "logic_sec", "phy_sec", "p_table", "model", "flags" }
-  local PARTITION_INFO_KEYS = { "number", "sec_start", "sec_end", "size", "fs", "type", "flags" }
+  local PARTITION_INFO_KEYS = { "number", "sec_start", "sec_end", "size", "fs", "tag_name", "flags" }
   local partition_temp
   local partitions_temp = {}
   local disk_temp
@@ -211,8 +187,9 @@ local get_parted_info = function(device)
         partition_temp["size"] = newsize
         partition_temp["size_formated"] = byte_format(newsize)
       end
+      partition_temp["number"] = tonumber(partition_temp["number"]) or -1
       if partition_temp["fs"] == "free" then
-        partition_temp["number"] = "-"
+        partition_temp["number"] = -1
         partition_temp["fs"] = "Free Space"
         partition_temp["name"] = "-"
       elseif device:match("sd") or device:match("sata") then
@@ -225,8 +202,41 @@ local get_parted_info = function(device)
       partition_temp["sec_end"] = partition_temp["sec_end"] and partition_temp["sec_end"]:sub(1,-2)
       partition_temp["mount_point"] = partition_temp["name"]~="-" and get_mount_point(partition_temp["name"]) or "-"
       partition_temp["useage"] = partition_temp["mount_point"]~="-" and get_partition_useage(partition_temp["name"]) or "-"
+      -- if disk_temp["p_table"] == "MBR" and (partition_temp["number"] < 4) and (partition_temp["number"] > 0) then
+      --   local real_size_sec = tonumber(nixio.fs.readfile("/sys/block/"..device.."/"..partition_temp["name"].."/size")) * tonumber(disk_temp.phy_sec)
+      --   if real_size_sec ~= partition_temp["size"] then
+      --     disk_temp["extended_partition_index"] = partition_temp["number"]
+      --     partition_temp["type"] = "extended"
+      --     partition_temp["size"] = real_size_sec
+      --     partition_temp["fs"] = "-"
+      --     partition_temp["logicals"] = {}
+      --   else
+      --     partition_temp["type"] = "primary"
+      --   end
+      -- end
 
       table.insert(partitions_temp, partition_temp)
+    end
+  end
+  if disk_temp["p_table"] == "MBR" then
+    for i, p in ipairs(partitions_temp) do
+      if disk_temp["extended_partition_index"] and p["number"] > 4 then
+        if tonumber(p["sec_end"]) <= tonumber(partitions_temp[disk_temp["extended_partition_index"]]["sec_end"]) and tonumber(p["sec_start"]) >= tonumber(partitions_temp[disk_temp["extended_partition_index"]]["sec_start"]) then
+          p["type"] = "logical"
+          table.insert(partitions_temp[disk_temp["extended_partition_index"]]["logicals"], i)
+        end
+      elseif (p["number"] < 4) and (p["number"] > 0) then
+        local real_size_sec = tonumber(nixio.fs.readfile("/sys/block/"..device.."/"..p["name"].."/size")) * tonumber(disk_temp.phy_sec)
+        if real_size_sec ~= p["size"] then
+          disk_temp["extended_partition_index"] = i
+          p["type"] = "extended"
+          p["size"] = real_size_sec
+          p["fs"] = "-"
+          p["logicals"] = {}
+        else
+          p["type"] = "primary"
+        end
+      end
     end
   end
   result = disk_temp
@@ -240,8 +250,8 @@ d.get_disk_info = function(device)
   {
     path, model, sn, size, size_mounted, flags, type, temp, p_table, logic_sec, phy_sec, sec_size, sata_ver, rota_rate, status, health,
     partitions = {
-      1 = { number, name, sec_start, sec_end, size, size_mounted, fs, type, flags, mount_point, useage },
-      2 = { number, name, sec_start, sec_end, size, size_mounted, fs, type, flags, mount_point, useage },
+      1 = { number, name, sec_start, sec_end, size, size_mounted, fs, tag_name, type, flags, mount_point, useage },
+      2 = { number, name, sec_start, sec_end, size, size_mounted, fs, tag_name, type, flags, mount_point, useage },
       ...
     }
   }
@@ -275,7 +285,6 @@ d.list_devices = function()
 
   local devices = {}
   for i, bname in pairs(target_devnames) do
-
     local device_info = {}
     local device = "/dev/" .. bname
     -- luci.util.perror(bname)

@@ -29,6 +29,7 @@ function index()
     entry({"admin", "system", "diskman", "disks"}, form("diskman/disks"), nil).leaf = true
     entry({"admin", "system", "diskman", "partition"}, form("diskman/partition"), nil).leaf = true
     entry({"admin", "system", "diskman", "get_disk_info"}, call("get_disk_info"), nil).leaf = true
+    entry({"admin", "system", "diskman", "mk_p_table"}, call("mk_p_table"), nil).leaf = true
   --   entry({"admin", "system", "diskman", "addpartition"}, call("action_addpartition"), nil).leaf = true
   --   entry({"admin", "system", "diskman", "removepartition"}, call("action_removepartition"), nil).leaf = true
   --   entry({"admin", "system", "diskman", "formatpartition"}, call("action_formatpartition"), nil).leaf = true
@@ -53,4 +54,33 @@ function get_disk_info(dev)
   luci.http.status(200, "ok")
   luci.http.prepare_content("application/json")
   luci.http.write_json(device_info)
+end
+
+function mk_p_table()
+  local p_table = luci.http.formvalue("p_table")
+  local dev = luci.http.formvalue("dev")
+  if not dev then
+    luci.http.status(500, "no device")
+    luci.http.write_json("no device")
+    return
+  elseif not nixio.fs.access("/dev/"..dev) then
+    luci.http.status(500, "no device")
+    luci.http.write_json("no device")
+    return
+  end
+  local dm = require "luci.model.diskman"
+  if p_table == "GPT" then
+    local res = luci.sys.call(dm.command.sgdisk .. " -g /dev/" .. dev)
+    if res == 0 then
+      luci.http.status(200, "ok")
+    else
+      luci.http.status(500, "command exec error")
+    end
+    luci.http.prepare_content("application/json")
+    luci.http.write_json({code=res})
+  else
+    luci.http.status(404, "not support")
+    luci.http.prepare_content("application/json")
+    luci.http.write_json({code="1"})
+  end
 end

@@ -13,13 +13,14 @@ local dm = require "luci.model.diskman"
 local dev = arg[1]
 
 if not dev then
-  return
+  luci.http.redirect(luci.dispatcher.build_url("admin/system/diskman"))
 elseif not nixio.fs.access("/dev/"..dev) then
-  return
+  luci.http.redirect(luci.dispatcher.build_url("admin/system/diskman"))
 end
 
 m = SimpleForm("partition", translate("Partition Management"), translate("Partition Disk over LuCI."))
 m.redirect = luci.dispatcher.build_url("admin/system/diskman")
+m:append(Template("diskman/partition_info"))
 -- disable submit and reset button
 m.submit = false
 m.reset = false
@@ -36,23 +37,71 @@ s:option(DummyValue, "sn", translate("Serial Number"))
 s:option(DummyValue, "size_formated", translate("Size"))
 s:option(DummyValue, "temp", translate("Temp"))
 s:option(DummyValue, "sec_size", translate("Sector Size "))
-s:option(DummyValue, "p_table", translate("Partition Table"))
+local dv_p_table = s:option(ListValue, "p_table", translate("Partition Table"))
+dv_p_table.render = function(self, section, scope)
+  if disk_info.p_table ~= "GPT" then
+    self:value(disk_info.p_table, disk_info.p_table)
+    self:value("GPT", "GPT")
+    self.default = disk_info.p_table
+    ListValue.render(self, section, scope)
+  else
+    self.template = "cbi/dvalue"
+    DummyValue.render(self, section, scope)
+  end
+end
 s:option(DummyValue, "sata_ver", translate("SATA Version"))
 s:option(DummyValue, "rota_rate", translate("Rotation Rate"))
-s:option(DummyValue, "health", translate("Health"))
 s:option(DummyValue, "status", translate("Status"))
--- s:option(Button, "_smart_info", translate("Smart Info"))
--- s:option(Button, "_eject", translate("Eject"))
--- echo 1 > /sys/block/(whatever)/device/delete
+local btn_health = s:option(Button, "health", translate("Health"))
+btn_health.render = function(self, section, scope)
+  if disk_info.health then
+    self.inputtitle = disk_info.health
+    if disk_info.health == "PASSED" then
+      self.inputstyle = "add"
+    else
+      self.inputstyle = "remove"
+    end
+    Button.render(self, section, scope)
+  else
+    self.template = "cbi/dvalue"
+    DummyValue.render(self, section, scope)
+  end
+end
+
+local btn_eject = s:option(Button, "_eject", translate("Eject"))
+btn_eject.template = "cbi/disabled_button"
+btn_eject.inputstyle = "remove"
+btn_eject.render = function(self, section, scope)
+  for i, p in ipairs(disk_info.partitions) do
+    if p.mount_point ~= "-" then
+      self.view_disabled = true
+      break
+    end
+  end
+  Button.render(self, section, scope)
+end
+btn_eject.forcewrite = true
+btn_eject.write = function(self, section, value)
+  for i, p in ipairs(disk_info.partitions) do
+    if p.mount_point ~= "-" then
+      m.message = p.name .. "is in use! please unmount it first!"
+      return
+    end
+  end
+  luci.util.exec("echo 1 > /sys/block/" .. dev .. "/device/delete")
+  luci.http.redirect(luci.dispatcher.build_url("admin/system/diskman"))
+end
+-- eject: echo 1 > /sys/block/(device)/device/delete
+-- rescan: echo '- - -' | tee /sys/class/scsi_host/host*/scan > /dev/null
 
 s_partition_table = m:section(Table, disk_info.partitions, translate("Partitions Info"), translate("Default 2048 sector alignment, support +size{b,k,m,g,t} in End Sector"))
 
-s_partition_table:option(DummyValue, "number", translate("Number"))
+-- s_partition_table:option(DummyValue, "number", translate("Number"))
 s_partition_table:option(DummyValue, "name", translate("Name"))
 local val_sec_start = s_partition_table:option(Value, "sec_start", translate("Start Sector"))
 val_sec_start.render = function(self, section, scope)
   -- could create new partition
-  if disk_info.partitions[section].number == "-" and disk_info.partitions[section].size > 1 * 1024 * 1024 then
+  if disk_info.partitions[section].number == -1 and disk_info.partitions[section].size > 1 * 1024 * 1024 then
     self.template = "cbi/value"
     Value.render(self, section, scope)
   else
@@ -63,7 +112,7 @@ end
 local val_sec_end = s_partition_table:option(Value, "sec_end", translate("End Sector"))
 val_sec_end.render = function(self, section, scope)
   -- could create new partition
-  if disk_info.partitions[section].number == "-" and disk_info.partitions[section].size > 1 * 1024 * 1024 then
+  if disk_info.partitions[section].number == -1 and disk_info.partitions[section].size > 1 * 1024 * 1024 then
     self.template = "cbi/value"
     Value.render(self, section, scope)
   else
@@ -80,6 +129,9 @@ val_sec_end.write = function(self, section, value)
   disk_info.partitions[section]._sec_end = value
 end
 s_partition_table:option(DummyValue, "size_formated", translate("Size"))
+if disk_info.p_table == "MBR" then
+  s_partition_table:option(DummyValue, "type", translate("Type"))
+end
 s_partition_table:option(DummyValue, "useage", translate("Useage"))
 s_partition_table:option(DummyValue, "mount_point", translate("Mount Point"))
 local val_fs = s_partition_table:option(Value, "fs", translate("File System"))
@@ -89,7 +141,7 @@ val_fs.write = function(self, section, value)
 end
 val_fs.render = function(self, section, scope)
   -- use listvalue when partition not mounted
-  if disk_info.partitions[section].mount_point == "-" and disk_info.partitions[section].number ~= "-" then
+  if disk_info.partitions[section].mount_point == "-" and disk_info.partitions[section].number ~= -1 and disk_info.partitions[section].type ~= "extended" then
     self.template = "cbi/value"
     self:reset_values()
     self.keylist = {}
@@ -108,7 +160,7 @@ val_fs.render = function(self, section, scope)
 end
 btn_format = s_partition_table:option(Button, "_format")
 btn_format.render = function(self, section, scope)
-  if disk_info.partitions[section].mount_point == "-" and disk_info.partitions[section].number ~= "-" then
+  if disk_info.partitions[section].mount_point == "-" and disk_info.partitions[section].number ~= -1 and disk_info.partitions[section].type ~= "extended" then
     self.inputtitle = "Format"
     self.template = "cbi/disabled_button"
     self.view_disabled = false
@@ -116,7 +168,7 @@ btn_format.render = function(self, section, scope)
     for k, v in pairs(format_cmd) do
       self:depends("val_fs", "k")
     end
-  -- elseif disk_info.partitions[section].mount_point ~= "-" and disk_info.partitions[section].number ~= "-" then
+  -- elseif disk_info.partitions[section].mount_point ~= "-" and disk_info.partitions[section].number ~= -1 then
   --   self.inputtitle = "Format"
   --   self.template = "cbi/disabled_button"
   --   self.view_disabled = true
@@ -150,15 +202,17 @@ btn_action.forcewrite = true
 btn_action.template = "cbi/disabled_button"
 btn_action.render = function(self, section, scope)
   -- if partition is mounted or the size < 1mb, then disable the action
-  if disk_info.partitions[section].mount_point ~= "-" or disk_info.partitions[section].size < 1 * 1024 * 1024 then
+  if disk_info.partitions[section].mount_point ~= "-" or (disk_info.partitions[section].type ~= "extended" and disk_info.partitions[section].size <= 1 * 1024 * 1024) then
     self.view_disabled = true
     -- self.inputtitle = ""
     -- self.template = "cbi/dvalue"
+  elseif disk_info.partitions[section].type == "extended" and next(disk_info.partitions[section]["logicals"]) ~= nil then
+    self.view_disabled = true
   else
     -- self.template = "cbi/disabled_button"
     self.view_disabled = false
   end
-  if disk_info.partitions[section].number ~= "-" then
+  if disk_info.partitions[section].number ~= -1 then
     self.inputtitle = translate("Remove")
     self.inputstyle = "remove"
   else
@@ -207,13 +261,23 @@ btn_action.write = function(self, section, value)
       m.message = "Invalid End Sector!"
       return
     end
+    local part_type = "primary"
     -- create partition table if no partition table
-    if disk_info.p_table == "UNKNOWN" then 
+    if disk_info.p_table == "UNKNOWN" then
       local cmd = dm.command.parted .. " -s /dev/" .. dev .. " mktable gpt"
+    elseif disk_info.p_table == "MBR" and disk_info["extended_partition_index"] then
+      if tonumber(disk_info.partitions[disk_info["extended_partition_index"]].sec_start) <= tonumber(start_sec:sub(1,-2)) and tonumber(disk_info.partitions[disk_info["extended_partition_index"]].sec_end) >= tonumber(end_sec:sub(1,-2)) then
+        part_type = "logical"
+        if tonumber(start_sec:sub(1,-2)) - tonumber(disk_info.partitions[section].sec_start) < 2048 then
+          start_sec = tonumber(start_sec:sub(1,-2)) + 2048
+          start_sec = start_sec .."s"
+        end
+      end
     end
+
     -- partiton
-    local cmd = dm.command.parted .. " -s -a optimal /dev/" .. dev .. " mkpart primary " .. start_sec .. " " .. end_sec
-    -- luci.util.perror(cmd)
+    local cmd = dm.command.parted .. " -s -a optimal /dev/" .. dev .. " mkpart " .. part_type .." " .. start_sec .. " " .. end_sec
+    luci.util.perror(cmd)
     local res = luci.util.exec(cmd)
     if res:match("Error.+") then
       m.message = res
