@@ -11,15 +11,14 @@ require "luci.util"
 require("luci.tools.webadmin")
 local dm = require "luci.model.diskman"
 
-local raid_mode = arg[1] or "raid"
-
 -- Use (non-UCI) SimpleForm since we have no related config file
 m = SimpleForm("diskman", translate("DiskMan"), translate("Manage Disks over LuCI."))
-m:append(Template("diskman/disk_info"))
+-- m:append(Template("diskman/disk_info"))
 -- disable submit and reset button
 m.submit = false
 m.reset = false
 
+-- disks
 local disks = dm.list_devices()
 d = m:section(Table, disks, translate("Disks"))
 d.config = "disk"
@@ -51,37 +50,90 @@ d.extedit = luci.dispatcher.build_url("admin/system/diskman/partition/%s")
 tab_section = m:section(SimpleSection)
 tab_section.template="diskman/raid_tab"
 
+-- mount point
+local mount_point = {}
+local _mount_point = { device = 0}
+table.insert( mount_point, _mount_point )
+local table_mp = m:section(Table, mount_point, translate("Mount Point"))
 
-if raid_mode == "raid" then
-  local raid_devices = {}
-  -- raid_devices = diskmanager.getRAIDdevices()
-  r = m:section(Table, raid_devices, translate("RAID Devices"))
-  path = r:option(DummyValue, "path", translate("Path"))
-  level = r:option(DummyValue, "level", translate("RAID mode"))
-  size = r:option(DummyValue, "size", translate("Size"))
-  status = r:option(DummyValue, "status", translate("Status"))
-  members = r:option(DummyValue, "members_str", translate("Members"))
-  remove = r:option(Button, "remove", translate("Remove"))
-  remove.inputstyle = "remove"
-  remove.write = function(self, section)
-    sys.call("/usr/bin/disk-raid-helper.sh remove "..raid_devices[section].path.." &> /dev/null")
-    luci.http.redirect(luci.dispatcher.build_url("admin/system/disk"))
+local v_device = table_mp:option(Value, "device", translate("Device"))
+v_device.render = function(self, section, scope)
+  if mount_point[section].device == 0 then
+    self.template = "cbi/value"
+    Value.render(self, section, scope)
+  else
+    self.template = "cbi/dvalue"
+    DummyValue.render(self, section, scope)
   end
-  -- redit = r:option(Button, "rpartition", translate("Edit Partition"))
-  -- redit.inputstyle = "edit"
-  -- redit.inputtitle = "Edit"
-  -- redit.write = function(self, section)
-  --   local url = luci.dispatcher.build_url("admin/system/disk/partition")
-  --   url = url .. "/" .. raid_devices[section].path:match("/dev/(.+)")
-  --   luci.http.redirect(url)
-  -- end
-  r.extedit  = luci.dispatcher.build_url("admin/system/disk/partition/%s")
-
-elseif raid_mode == "mergerfs" then
-
-elseif raid_mode == "btrfs" then
-
 end
+local v_fs = table_mp:option(Value, "fs", translate("File System"))
+v_fs.render = function(self, section, scope)
+  if mount_point[section].device == 0 then
+    self.template = "cbi/value"
+    self:value("auto", "auto")
+    self.default = "auto"
+    Value.render(self, section, scope)
+  else
+    self.template = "cbi/dvalue"
+    DummyValue.render(self, section, scope)
+  end
+end
+local v_mount_option = table_mp:option(Value, "mount_options", translate("Mount Options"))
+v_mount_option.render = function(self, section, scope)
+  if mount_point[section].device == 0 then
+    self.template = "cbi/value"
+    self.placeholder = "rw,noauto"
+    Value.render(self, section, scope)
+  else
+    self.template = "cbi/dvalue"
+    DummyValue.render(self, section, scope)
+  end
+end
+local v_mount_point = table_mp:option(Value, "mount_point", translate("Mount Point"))
+v_mount_point.render = function(self, section, scope)
+  if mount_point[section].device == 0 then
+    self.template = "cbi/value"
+    self.placeholder = "/media/diskX"
+    Value.render(self, section, scope)
+  else
+    self.template = "cbi/dvalue"
+    DummyValue.render(self, section, scope)
+  end
+end
+table_mp:option(DummyValue, "useage", translate("Useage"))
+local btn_umount = table_mp:option(Button, "_umount", translate("Umount"))
+table_mp.config = "mount_point"
+
+-- mount point
+local raid_devices = {}
+-- raid_devices = diskmanager.getRAIDdevices()
+r = m:section(Table, raid_devices, translate("RAID Devices"))
+r.config = "raid"
+path = r:option(DummyValue, "path", translate("Path"))
+level = r:option(DummyValue, "level", translate("RAID mode"))
+size = r:option(DummyValue, "size", translate("Size"))
+status = r:option(DummyValue, "status", translate("Status"))
+members = r:option(DummyValue, "members_str", translate("Members"))
+remove = r:option(Button, "remove", translate("Remove"))
+remove.inputstyle = "remove"
+remove.write = function(self, section)
+  sys.call("/usr/bin/disk-raid-helper.sh remove "..raid_devices[section].path.." &> /dev/null")
+  luci.http.redirect(luci.dispatcher.build_url("admin/system/disk"))
+end
+-- redit = r:option(Button, "rpartition", translate("Edit Partition"))
+-- redit.inputstyle = "edit"
+-- redit.inputtitle = "Edit"
+-- redit.write = function(self, section)
+--   local url = luci.dispatcher.build_url("admin/system/disk/partition")
+--   url = url .. "/" .. raid_devices[section].path:match("/dev/(.+)")
+--   luci.http.redirect(url)
+-- end
+r.extedit  = luci.dispatcher.build_url("admin/system/disk/partition/%s")
+
+-- btrfs
+local btrfs_devices = {}
+local table_btrfs = m:section(Table, btrfs_devices, translate("Btrfs"))
+table_btrfs.config = "btrfs"
 
 return m
 
