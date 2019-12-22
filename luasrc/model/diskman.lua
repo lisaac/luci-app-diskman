@@ -23,33 +23,15 @@ local mounts = nixio.fs.readfile("/proc/mounts") or ""
 local swaps = nixio.fs.readfile("/proc/swaps") or ""
 local df = luci.sys.exec(d.command.df) or ""
 
--- Check if it contains nas partition (LABEL=nasetc)
-local isSystemMMC = function(device)
-  if not device:match("/dev/mmcblk%S+") then return false end
-
-  local ls = io.popen("ls "..device.."p*", "r")
-  for partition in ls:lines() do
-    local blkid = io.popen(d.command.blkid .. " -s LABEL -o value "..partition, "r")
-    local label = blkid:read("*all"):gsub("([^\n+])\n", "%1")
-    blkid:close()
-    if label == "nasetc" then
-      ls:close()
-      return true
-    end
-  end
-  ls:close()
-  return false
-end
-
 function byte_format(byte)
-	local suff = {"B", "KB", "MB", "GB", "TB"}
-	for i=1, 5 do
-		if byte > 1024 and i < 5 then
-			byte = byte / 1024
-		else
-			return string.format("%.2f %s", byte, suff[i]) 
-		end 
-	end
+  local suff = {"B", "KB", "MB", "GB", "TB"}
+  for i=1, 5 do
+    if byte > 1024 and i < 5 then
+      byte = byte / 1024
+    else
+      return string.format("%.2f %s", byte, suff[i]) 
+    end 
+  end
 end
 
 local get_smart_info = function(device)
@@ -118,7 +100,6 @@ end
 local get_mount_point = function(partition)
   local mount_point, dk_root_dir
   -- if use luci-in-dokcer, exclude the docker overlay mounts
-  
   if ver.distname == "LuCI in Docker" then
     local _o, dk = pcall(require,"luci.docker")
     if _o and dk then
@@ -245,6 +226,25 @@ local get_parted_info = function(device)
   return result
 end
 
+-- return {{device="", mount_points="", fs="", mount_options="", dump="", pass=""}..}
+d.get_mount_points = function()
+  local mount
+  local res = {}
+  local h ={"device", "mount_point", "fs", "mount_options", "dump", "pass"}
+  for mount in mounts:gmatch("[^\n]+") do
+    local device = mount:match("^([^%s]+)%s+.+")
+    if "overlay" ~= device and "cgroup" ~= device and "sysfs" ~= device and "proc" ~= device and "udev" ~= device and "devpts" ~= device  and "hugetlbfs" ~= device  and "mqueue" ~= device then
+      res[#res+1] = {}
+      local i = 0
+      for v in mount:gmatch("[^%s]+") do
+        i = i + 1
+        res[#res][h[i]] = v
+      end
+    end
+  end
+  return res
+end
+
 d.get_disk_info = function(device)
   --[[ return:
   {
@@ -292,7 +292,6 @@ d.list_devices = function()
     local ss = tonumber(fs.readfile(string.format("/sys/class/block/%s/queue/logical_block_size", bname)))
     local model = fs.readfile(string.format("/sys/class/block/%s/device/model", bname))
 
-    if not isSystemMMC(device) and size > 0 then
       device_info["path"] = device
       device_info["size_formated"] = byte_format(size*ss)
       device_info["model"] = model
@@ -310,7 +309,6 @@ d.list_devices = function()
         if udevinfo["ID_MODEL"] then device_info["model"] = udevinfo["ID_MODEL"] end
       end
       devices[bname] = device_info
-    end
   end
   return devices
 end
