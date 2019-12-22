@@ -14,6 +14,7 @@ local dm = require "luci.model.diskman"
 
 -- Use (non-UCI) SimpleForm since we have no related config file
 m = SimpleForm("diskman", translate("DiskMan"), translate("Manage Disks over LuCI."))
+m.template = "cbi/xsimpleform"
 m:append(Template("diskman/disk_info"))
 -- disable submit and reset button
 m.submit = false
