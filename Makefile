@@ -15,7 +15,7 @@ define Package/$(PKG_NAME)
 	SUBMENU:=3. Applications
 	TITLE:=Disk Manager interface for LuCI
 	PKGARCH:=all
-	DEPENDS:=+e2fsprogs +mdadm +parted +smartmontools +blkid +btrfs-progs +hdparm
+	DEPENDS:=+e2fsprogs +parted +smartmontools +blkid +btrfs-progs +hdparm
 endef
 
 define Package/$(PKG_NAME)/description
@@ -36,8 +36,8 @@ endef
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci
 	cp -pR ./luasrc/* $(1)/usr/lib/lua/luci
-	$(INSTALL_DIR) $(1)/
-	cp -pR ./root/* $(1)/
+	# $(INSTALL_DIR) $(1)/
+	# cp -pR ./root/* $(1)/
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
