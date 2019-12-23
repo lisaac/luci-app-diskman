@@ -20,17 +20,17 @@
         // handle disk info
         item.childNodes.forEach((cell) => {
           if (cell && cell.attributes) {
-            if (cell.getAttribute("data-name") == "sn") {
+            if (cell.getAttribute("data-name") == "sn" || cell.childNodes[1] && cell.childNodes[1].id.match(/sn/)) {
               cell.innerText = disk_info.sn || "-"
-            } else if (cell.getAttribute("data-name") == "temp") {
+            } else if (cell.getAttribute("data-name") == "temp" || cell.childNodes[1] && cell.childNodes[1].id.match(/temp/)) {
               cell.innerText = disk_info.temp || "-"
-            } else if (cell.getAttribute("data-name") == "p_table") {
+            } else if (cell.getAttribute("data-name") == "p_table" || cell.childNodes[1] && cell.childNodes[1].id.match(/p_table/)) {
               cell.innerText = disk_info.p_table || "-"
-            } else if (cell.getAttribute("data-name") == "sata_ver") {
+            } else if (cell.getAttribute("data-name") == "sata_ver" || cell.childNodes[1] && cell.childNodes[1].id.match(/sata_ver/)) {
               cell.innerText = disk_info.sata_ver || "-"
-            } else if (cell.getAttribute("data-name") == "health") {
+            } else if (cell.getAttribute("data-name") == "health" || cell.childNodes[1] && cell.childNodes[1].id.match(/health/)) {
               cell.innerText = disk_info.health || "-"
-            } else if (cell.getAttribute("data-name") == "status") {
+            } else if (cell.getAttribute("data-name") == "status" || cell.childNodes[1] && cell.childNodes[1].id.match(/status/)) {
               cell.innerText = disk_info.status || "-"
             }
           }
@@ -53,7 +53,7 @@
             partitons_div += partiton_div
           })
           if (item.nodeName == "TR") {
-            partitons_div = '</td></tr>'
+            partitons_div += '</td></tr>'
           } else if (item.nodeName == "DIV") {
             partitons_div += '</div><div>&nbsp</div></div>'
           }
