@@ -15,7 +15,7 @@ define Package/$(PKG_NAME)
 	SUBMENU:=3. Applications
 	TITLE:=Disk Manager interface for LuCI
 	PKGARCH:=all
-	DEPENDS:=+e2fsprogs +mdadm +parted +smartmontools +blkid +btrfs-progs
+	DEPENDS:=+e2fsprogs +mdadm +parted +smartmontools +blkid +btrfs-progs +hdparm
 endef
 
 define Package/$(PKG_NAME)/description

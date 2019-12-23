@@ -50,9 +50,9 @@ local get_smart_info = function(device)
         section = 1
       elseif attrib == "READ SMART DATA" then
         section = 2
-      elseif smart_info.status == "-" then
+      elseif not smart_info.status then
         val = line:match "^Device is in (.*) mode"
-        if val then smart_info.status = val:lower() end
+        if val then smart_info.status = val end
       end
     end
 
@@ -245,7 +245,7 @@ d.get_mount_points = function()
   return res
 end
 
-d.get_disk_info = function(device)
+d.get_disk_info = function(device, wakeup)
   --[[ return:
   {
     path, model, sn, size, size_mounted, flags, type, temp, p_table, logic_sec, phy_sec, sec_size, sata_ver, rota_rate, status, health,
@@ -257,14 +257,24 @@ d.get_disk_info = function(device)
   }
   --]]
   if not device then return end
-  local disk_info = get_parted_info(device)
+  local disk_info
   local smart_info = get_smart_info(device)
-  
+  -- if status is not active(standby), only check smart_info.
+  -- if only weakup == true, weakup the disk and check parted_info.
+  if smart_info.status == "ACTIVE" or wakeup then
+    disk_info = get_parted_info(device)
+    disk_info["sec_size"] = disk_info["logic_sec"] .. "/" .. disk_info["phy_sec"]
+    disk_info["size_formated"] = byte_format(tonumber(disk_info["size"]))
+    -- if status is standby, then get smart_info again
+    if smart_info.status ~= "ACTIVE" then smart_info = get_smart_info(device) end
+  else
+    disk_info = {}
+  end
+
   for k, v in pairs(smart_info) do
     disk_info[k] = v
   end
-  disk_info["sec_size"] = disk_info["logic_sec"] .. "/" .. disk_info["phy_sec"]
-  disk_info["size_formated"] = byte_format(tonumber(disk_info["size"]))
+
   return disk_info
 end
 

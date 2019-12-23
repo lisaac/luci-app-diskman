@@ -12,7 +12,7 @@ module("luci.controller.diskman",package.seeall)
 
 function index()
   -- check all used executables in disk management are existed
-  local CMD = {"parted", "mdadm", "blkid", "smartctl"}
+  local CMD = {"parted", "blkid", "smartctl"}
   local executables_all_existed = true
   for _, cmd in ipairs(CMD) do
     local command = luci.sys.exec("/usr/bin/which " .. cmd)

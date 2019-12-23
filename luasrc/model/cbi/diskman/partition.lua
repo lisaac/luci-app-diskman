@@ -27,7 +27,7 @@ m:append(Template("diskman/partition_info"))
 m.submit = false
 m.reset = false
 
-local disk_info = dm.get_disk_info(dev)
+local disk_info = dm.get_disk_info(dev, true)
 local format_cmd = dm.get_format_cmd()
 
 s = m:section(Table, {disk_info}, translate("Device Info"))
