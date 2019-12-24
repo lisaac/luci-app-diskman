@@ -49,7 +49,22 @@ d:option(DummyValue, "status", translate("Status"))
 -- end
 d.extedit = luci.dispatcher.build_url("admin/system/diskman/partition/%s")
 
+rescan = m:section(SimpleSection)
+rescan_button = rescan:option(Button, "_rescan")
+rescan_button.inputtitle= translate("Rescan Disks")
+rescan_button.template = "cbi/inlinebutton"
+rescan_button.inputstyle = "add"
+rescan_button.forcewrite = true
+rescan_button.write = function(self, section, value)
+  luci.util.exec("echo '- - -' | tee /sys/class/scsi_host/host*/scan > /dev/null")
+  luci.http.redirect(luci.dispatcher.build_url("admin/system/diskman"))
+end
+
 tab_section = m:section(SimpleSection)
+tab_section.tabs = {
+  mount_point = translate("Mount Point")
+}
+tab_section.default_tab = "mount_point"
 tab_section.template="diskman/disk_info_tab"
 
 -- mount point
@@ -147,34 +162,38 @@ end
 
 
 -- raid devices
--- local raid_devices = {}
--- -- raid_devices = diskmanager.getRAIDdevices()
--- r = m:section(Table, raid_devices, translate("RAID Devices"))
--- r.config = "raid"
--- path = r:option(DummyValue, "path", translate("Path"))
--- level = r:option(DummyValue, "level", translate("RAID mode"))
--- size = r:option(DummyValue, "size", translate("Size"))
--- status = r:option(DummyValue, "status", translate("Status"))
--- members = r:option(DummyValue, "members_str", translate("Members"))
--- remove = r:option(Button, "remove", translate("Remove"))
--- remove.inputstyle = "remove"
--- remove.write = function(self, section)
---   sys.call("/usr/bin/disk-raid-helper.sh remove "..raid_devices[section].path.." &> /dev/null")
---   luci.http.redirect(luci.dispatcher.build_url("admin/system/disk"))
--- end
--- -- redit = r:option(Button, "rpartition", translate("Edit Partition"))
--- -- redit.inputstyle = "edit"
--- -- redit.inputtitle = "Edit"
--- -- redit.write = function(self, section)
--- --   local url = luci.dispatcher.build_url("admin/system/disk/partition")
--- --   url = url .. "/" .. raid_devices[section].path:match("/dev/(.+)")
--- --   luci.http.redirect(url)
--- -- end
--- r.extedit  = luci.dispatcher.build_url("admin/system/disk/partition/%s")
-
+if dm.command.mdadm then
+  tab_section.tabs.raid = translate("Raid")
+  local raid_devices = {}
+  -- raid_devices = diskmanager.getRAIDdevices()
+  r = m:section(Table, raid_devices, translate("RAID Devices"))
+  r.config = "raid"
+  path = r:option(DummyValue, "path", translate("Path"))
+  level = r:option(DummyValue, "level", translate("RAID mode"))
+  size = r:option(DummyValue, "size", translate("Size"))
+  status = r:option(DummyValue, "status", translate("Status"))
+  members = r:option(DummyValue, "members_str", translate("Members"))
+  remove = r:option(Button, "remove", translate("Remove"))
+  remove.inputstyle = "remove"
+  remove.write = function(self, section)
+    sys.call("/usr/bin/disk-raid-helper.sh remove "..raid_devices[section].path.." &> /dev/null")
+    luci.http.redirect(luci.dispatcher.build_url("admin/system/disk"))
+  end
+  -- redit = r:option(Button, "rpartition", translate("Edit Partition"))
+  -- redit.inputstyle = "edit"
+  -- redit.inputtitle = "Edit"
+  -- redit.write = function(self, section)
+  --   local url = luci.dispatcher.build_url("admin/system/disk/partition")
+  --   url = url .. "/" .. raid_devices[section].path:match("/dev/(.+)")
+  --   luci.http.redirect(url)
+  -- end
+  r.extedit  = luci.dispatcher.build_url("admin/system/disk/partition/%s")
+end
 -- -- btrfs
--- local btrfs_devices = {}
--- local table_btrfs = m:section(Table, btrfs_devices, translate("Btrfs"))
--- table_btrfs.config = "btrfs"
-
+if dm.command.btrfs then
+  tab_section.tabs.btrfs = translate("Btrfs")
+  local btrfs_devices = {}
+  local table_btrfs = m:section(Table, btrfs_devices, translate("Btrfs"))
+  table_btrfs.config = "btrfs"
+end
 return m

@@ -20,7 +20,7 @@ elseif not nixio.fs.access("/dev/"..dev) then
 end
 
 m = SimpleForm("partition", translate("Partition Management"), translate("Partition Disk over LuCI."))
-m.template = "cbi/ysimpleform"
+m.template = "cbi/xsimpleform"
 m.redirect = luci.dispatcher.build_url("admin/system/diskman")
 m:append(Template("diskman/partition_info"))
 -- disable submit and reset button

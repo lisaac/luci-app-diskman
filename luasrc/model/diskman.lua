@@ -11,12 +11,12 @@ $Id$
 require "luci.util"
 local ver = require "luci.version"
 
-local CMD = {"parted", "mdadm", "blkid", "smartctl", "df", "sgdisk"}
+local CMD = {"parted", "mdadm", "blkid", "smartctl", "df", "sgdisk", "btrfs"}
 
 local d = {command ={}}
 for _, cmd in ipairs(CMD) do
   local command = luci.sys.exec("/usr/bin/which " .. cmd)
-    d.command[cmd] = command:match("^.+"..cmd) or ""
+    d.command[cmd] = command:match("^.+"..cmd) or nil
 end
 
 local mounts = nixio.fs.readfile("/proc/mounts") or ""

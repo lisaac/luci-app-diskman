@@ -1,11 +1,16 @@
 <br>
 <ul class="cbi-tabmenu">
-  <li id="tab.raid-tab.mount_point" class="cbi-tab"><a
-      onclick="this.blur(); return cbi_t_switch('raid-tab', 'mount_point')" href=""><%:Mount Point%></a></li>
-  <li id="tab.raid-tab.raid" class="cbi-tab-disabled"><a onclick="this.blur(); return cbi_t_switch('raid-tab', 'raid')"
-      href=""><%:Raid%></a></li>
-  <li id="tab.raid-tab.btrfs" class="cbi-tab-disabled"><a
-      onclick="this.blur(); return cbi_t_switch('raid-tab', 'btrfs')" href=""><%:Btrfs%></a></li>
+  <% for k, v in pairs(self.tabs) do
+      local class = k == self.default_tab and "cbi-tab" or "cbi-tab-disabled" 
+      local id = "tab.raid-tab." .. k
+  %>
+        <li id=<%=id%> class=<%=class%> >
+          <a onclick="this.blur(); return cbi_t_switch('raid-tab', '<%=k%>')" href=""><%=v%></a>
+        </li>
+  <% end %>
+  <!-- <li id="tab.raid-tab.mount_point" class="cbi-tab">
+    <a onclick="this.blur(); return cbi_t_switch('raid-tab', 'mount_point')" href=""><%:Mount Point%></a>
+  </li> -->
 </ul>
 
 <script type="text/javascript">
@@ -62,23 +67,23 @@
       })
     })
     // tab
-    const mount_point_table = document.getElementById("cbi-mount_point-table")
-    if (mount_point_table) {
-      mount_point_table.setAttribute("style", "display: block;")
-      mount_point_table.setAttribute("id", "container.raid-tab.mount_point")
-      cbi_t_add('raid-tab', 'mount_point')
-    }
-    const raid_table = document.getElementById("cbi-raid-table")
-    if (raid_table) {
-      raid_table.setAttribute("style", "display: none;")
-      raid_table.setAttribute("id", "container.raid-tab.raid")
-      cbi_t_add('raid-tab', 'raid')
-    }
-    const btrfs_table = document.getElementById("cbi-btrfs-table")
-    if (btrfs_table) {
-      btrfs_table.setAttribute("style", "display: none;")
-      btrfs_table.setAttribute("id", "container.raid-tab.btrfs")
-      cbi_t_add('raid-tab', 'btrfs')
-    }
+    <% for k, v in pairs(self.tabs) do
+      local display = k == self.default_tab and "block" or "none" 
+      local id = "cbi-"..k.."-table"
+      local cid = "container.raid-tab." .. k
+    %>
+      mount_point_table = document.getElementById("<%=id%>") || null
+      if (mount_point_table) {
+        mount_point_table.setAttribute("style", "display: <%=display%>;")
+        mount_point_table.setAttribute("id", "<%=cid%>")
+        cbi_t_add('raid-tab', '<%=k%>')
+      }
+    <%end%>
+    // const mount_point_table = document.getElementById("cbi-mount_point-table")
+    // if (mount_point_table) {
+    //   mount_point_table.setAttribute("style", "display: block;")
+    //   mount_point_table.setAttribute("id", "container.raid-tab.mount_point")
+    //   cbi_t_add('raid-tab', 'mount_point')
+    // }
   }
 </script>
