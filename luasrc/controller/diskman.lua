@@ -7,6 +7,7 @@ You may obtain a copy of the License at
   http://www.apache.org/licenses/LICENSE-2.0
 $Id$
 ]]--
+
 require "luci.util"
 module("luci.controller.diskman",package.seeall)
 
@@ -22,21 +23,20 @@ function index()
     end
   end
 
-  if executables_all_existed then
-    -- entry(path, target, title, order)
-    -- set leaf attr to true to pass argument throughe url (e.g. admin/system/disk/partition/sda)
-    entry({"admin", "system", "diskman"}, alias("admin", "system", "diskman", "disks"), _("Disk Man"), 55)
-    entry({"admin", "system", "diskman", "disks"}, form("diskman/disks"), nil).leaf = true
-    entry({"admin", "system", "diskman", "partition"}, form("diskman/partition"), nil).leaf = true
-    entry({"admin", "system", "diskman", "get_disk_info"}, call("get_disk_info"), nil).leaf = true
-    entry({"admin", "system", "diskman", "mk_p_table"}, call("mk_p_table"), nil).leaf = true
-  --   entry({"admin", "system", "diskman", "addpartition"}, call("action_addpartition"), nil).leaf = true
-  --   entry({"admin", "system", "diskman", "removepartition"}, call("action_removepartition"), nil).leaf = true
-  --   entry({"admin", "system", "diskman", "formatpartition"}, call("action_formatpartition"), nil).leaf = true
-  --   entry({"admin", "system", "diskman", "createraid"}, call("action_createraid"), nil).leaf = true
-  --   entry({"admin", "system", "diskman", "createpartitiontable"}, call("action_createpartitiontable"), nil).leaf = true
-  --   entry({"admin", "system", "diskman", "removepartitiontable"}, call("action_removepartitiontable"), nil).leaf = true
-  end
+  if not executables_all_existed then return end
+  -- entry(path, target, title, order)
+  -- set leaf attr to true to pass argument throughe url (e.g. admin/system/disk/partition/sda)
+  entry({"admin", "system", "diskman"}, alias("admin", "system", "diskman", "disks"), _("Disk Man"), 55)
+  entry({"admin", "system", "diskman", "disks"}, form("diskman/disks"), nil).leaf = true
+  entry({"admin", "system", "diskman", "partition"}, form("diskman/partition"), nil).leaf = true
+  entry({"admin", "system", "diskman", "get_disk_info"}, call("get_disk_info"), nil).leaf = true
+  entry({"admin", "system", "diskman", "mk_p_table"}, call("mk_p_table"), nil).leaf = true
+--   entry({"admin", "system", "diskman", "addpartition"}, call("action_addpartition"), nil).leaf = true
+--   entry({"admin", "system", "diskman", "removepartition"}, call("action_removepartition"), nil).leaf = true
+--   entry({"admin", "system", "diskman", "formatpartition"}, call("action_formatpartition"), nil).leaf = true
+--   entry({"admin", "system", "diskman", "createraid"}, call("action_createraid"), nil).leaf = true
+--   entry({"admin", "system", "diskman", "createpartitiontable"}, call("action_createpartitiontable"), nil).leaf = true
+--   entry({"admin", "system", "diskman", "removepartitiontable"}, call("action_removepartitiontable"), nil).leaf = true
 end
 
 function get_disk_info(dev)

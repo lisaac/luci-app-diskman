@@ -20,7 +20,7 @@ elseif not nixio.fs.access("/dev/"..dev) then
 end
 
 m = SimpleForm("partition", translate("Partition Management"), translate("Partition Disk over LuCI."))
-m.template = "cbi/xsimpleform"
+m.template = "diskman/cbi/xsimpleform"
 m.redirect = luci.dispatcher.build_url("admin/system/diskman")
 m:append(Template("diskman/partition_info"))
 -- disable submit and reset button
@@ -72,7 +72,7 @@ btn_health.render = function(self, section, scope)
 end
 
 local btn_eject = s:option(Button, "_eject", translate("Eject"))
-btn_eject.template = "cbi/disabled_button"
+btn_eject.template = "diskman/cbi/disabled_button"
 btn_eject.inputstyle = "remove"
 btn_eject.render = function(self, section, scope)
   for i, p in ipairs(disk_info.partitions) do
@@ -165,7 +165,7 @@ btn_format = s_partition_table:option(Button, "_format")
 btn_format.render = function(self, section, scope)
   if disk_info.partitions[section].mount_point == "-" and disk_info.partitions[section].number ~= -1 and disk_info.partitions[section].type ~= "extended" then
     self.inputtitle = "Format"
-    self.template = "cbi/disabled_button"
+    self.template = "diskman/cbi/disabled_button"
     self.view_disabled = false
     self.inputstyle = "reset"
     for k, v in pairs(format_cmd) do
@@ -173,7 +173,7 @@ btn_format.render = function(self, section, scope)
     end
   -- elseif disk_info.partitions[section].mount_point ~= "-" and disk_info.partitions[section].number ~= -1 then
   --   self.inputtitle = "Format"
-  --   self.template = "cbi/disabled_button"
+  --   self.template = "diskman/cbi/disabled_button"
   --   self.view_disabled = true
   --   self.inputstyle = "reset"
   else
@@ -202,7 +202,7 @@ end
 
 local btn_action = s_partition_table:option(Button, "_action", translate("Action"))
 btn_action.forcewrite = true
-btn_action.template = "cbi/disabled_button"
+btn_action.template = "diskman/cbi/disabled_button"
 btn_action.render = function(self, section, scope)
   -- if partition is mounted or the size < 1mb, then disable the add action
   if disk_info.partitions[section].mount_point ~= "-" or (disk_info.partitions[section].type ~= "extended" and disk_info.partitions[section].number == -1 and disk_info.partitions[section].size <= 1 * 1024 * 1024) then
@@ -212,7 +212,7 @@ btn_action.render = function(self, section, scope)
   elseif disk_info.partitions[section].type == "extended" and next(disk_info.partitions[section]["logicals"]) ~= nil then
     self.view_disabled = true
   else
-    -- self.template = "cbi/disabled_button"
+    -- self.template = "diskman/cbi/disabled_button"
     self.view_disabled = false
   end
   if disk_info.partitions[section].number ~= -1 then

@@ -14,7 +14,7 @@ local dm = require "luci.model.diskman"
 
 -- Use (non-UCI) SimpleForm since we have no related config file
 m = SimpleForm("diskman", translate("DiskMan"), translate("Manage Disks over LuCI."))
-m.template = "cbi/xsimpleform"
+m.template = "diskman/cbi/xsimpleform"
 -- m:append(Template("diskman/disk_info"))
 -- disable submit and reset button
 m.submit = false
@@ -52,7 +52,7 @@ d.extedit = luci.dispatcher.build_url("admin/system/diskman/partition/%s")
 rescan = m:section(SimpleSection)
 rescan_button = rescan:option(Button, "_rescan")
 rescan_button.inputtitle= translate("Rescan Disks")
-rescan_button.template = "cbi/inlinebutton"
+rescan_button.template = "diskman/cbi/inlinebutton"
 rescan_button.inputstyle = "add"
 rescan_button.forcewrite = true
 rescan_button.write = function(self, section, value)

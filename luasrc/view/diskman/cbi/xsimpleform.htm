@@ -1,6 +1,5 @@
-<%
-	if not self.embedded then
-		%><form method="post" enctype="multipart/form-data" action="<%=REQUEST_URI%>"<%=
+<% if not self.embedded then %>
+<form method="post" enctype="multipart/form-data" action="<%=REQUEST_URI%>"<%=
 			attr("data-strings", luci.util.serialize_json({
 				label = {
 					choose = translate('-- Please choose --'),
@@ -12,6 +11,7 @@
 				}
 			}))
 		%>>
+			<script type="text/javascript" src="<%=resource%>/cbi.js"></script>
 			<input type="hidden" name="token" value="<%=token%>" />
 			<input type="hidden" name="cbi.submit" value="1" /><%
 	end
