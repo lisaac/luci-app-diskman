@@ -12,7 +12,7 @@ A Simple Disk Manager for LuCI, support disk partition and format, support raid/
 ### Compile
 ``` bash
 git clone https://github.com/lisaac/luci-app-diskman package/luci-app-diskman
-mkdir -p package/parted && cp -i package/luci-app/diskman/Parted.Makefile package/parted/Makefile
+mkdir -p package/parted && cp -i package/luci-app-diskman/Parted.Makefile package/parted/Makefile
 
 #compile package only
 make package/luci-app-diskman/compile V=99
