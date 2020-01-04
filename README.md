@@ -8,6 +8,8 @@ A Simple Disk Manager for LuCI, support disk partition and format, support raid/
 - e2fsprogs
 - btrfs-progs (Optional)
 - mdadm (Optional)
+    - kmod-md-raid456 (Optional)
+    - kmod-md-linear (Optional)
 
 ### Compile
 ``` bash

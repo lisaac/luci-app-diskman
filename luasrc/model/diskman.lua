@@ -97,6 +97,20 @@ local parse_parted_info = function(keys, line)
   return result
 end
 
+local is_raid_member = function(partition)
+  -- check if inuse as raid member
+  if nixio.fs.access("/proc/mdstat") then
+    for _, result in ipairs(luci.util.execl("grep md /proc/mdstat | sed 's/[][]//g'")) do
+      local md, buf
+      md, buf = result:match("(md.-):(.+)")
+      if buf:match(partition) then
+        return "Raid Member: ".. md
+      end
+    end
+  end
+  return nil
+end
+
 local get_mount_point = function(partition)
   local mount_point, dk_root_dir
   -- if use luci-in-dokcer, exclude the docker overlay mounts
@@ -117,16 +131,12 @@ local get_mount_point = function(partition)
   -- result = luci.sys.exec('cat /proc/mounts | awk \'{if($1=="/dev/'.. partition ..'") print $2}\'')
   -- if result ~= "" then return result end
 
-  if swaps:match("\n/dev/" .. partition) then return "swap" end
+  if swaps:match("\n/dev/" .. partition .."%s") then return "swap" end
   -- result = luci.sys.exec("cat /proc/swaps | grep /dev/" .. partition)
   -- if result ~= "" then return "swap" end
 
-  -- check if used as raid partition
-  if nixio.fs.access("/proc/mdstat") then
-    result = luci.sys.exec("grep md /proc/mdstat | cut -d ':' -f 2 | grep " .. partition)
-    if result ~= "" then return true end
-  end
-  return false
+  return is_raid_member(partition)
+
 end
 
 local get_partition_useage = function(partition)
@@ -226,6 +236,22 @@ local get_parted_info = function(device)
   return result
 end
 
+local mddetail = function(mdpath)
+	local detail = {}
+	local path = mdpath:match("^/dev/md%d+$")
+	if path then
+		local mdadm = io.popen(d.command.mdadm .. " --detail "..path, "r")
+		for line in mdadm:lines() do
+			local key, value = line:match("^%s*(.+) : (.+)")
+			if key then
+				detail[key] = value
+			end
+		end
+		mdadm:close()
+	end
+	return detail
+end
+
 -- return {{device="", mount_points="", fs="", mount_options="", dump="", pass=""}..}
 d.get_mount_points = function()
   local mount
@@ -254,14 +280,20 @@ d.get_disk_info = function(device, wakeup)
       2 = { number, name, sec_start, sec_end, size, size_mounted, fs, tag_name, type, flags, mount_point, useage },
       ...
     }
+    --raid devices only
+    level, members, members_str
   }
   --]]
   if not device then return end
   local disk_info
   local smart_info = get_smart_info(device)
+
+  -- check if divice is the member of raid
+  smart_info["p_table"] = is_raid_member(device..'0')
   -- if status is not active(standby), only check smart_info.
   -- if only weakup == true, weakup the disk and check parted_info.
-  if smart_info.status == "ACTIVE" or wakeup then
+
+  if smart_info.status == "ACTIVE" or wakeup or (smart_info["p_table"] and not smart_info["p_table"]:match("Raid")) or device:match("^md") then
     disk_info = get_parted_info(device)
     disk_info["sec_size"] = disk_info["logic_sec"] .. "/" .. disk_info["phy_sec"]
     disk_info["size_formated"] = byte_format(tonumber(disk_info["size"]))
@@ -275,10 +307,78 @@ d.get_disk_info = function(device, wakeup)
     disk_info[k] = v
   end
 
+  if disk_info.type and disk_info.type:match("md") then
+    local raid_info = d.list_raid_devices()[disk_info["path"]:match("/dev/(.+)")]
+    for k, v in pairs(raid_info) do
+      disk_info[k] = v
+    end
+  end
   return disk_info
 end
 
+d.list_raid_devices = function()
+  local fs = require "nixio.fs"
+
+  local raid_devices = {}
+  if not fs.access("/proc/mdstat") then return raid_devices end
+  local mdstat = io.open("/proc/mdstat", "r")
+  for line in mdstat:lines() do
+
+    -- md1 : active raid1 sdb2[1] sda2[0]
+    -- md127 : active raid5 sdh1[6] sdg1[4] sdf1[3] sde1[2] sdd1[1] sdc1[0]
+    local device_info = {}
+    local mdpath, list = line:match("^(md%d+) : (.+)")
+    if mdpath then
+      local members = {}
+      for member in string.gmatch(list, "%S+") do
+        member_path = member:match("^(%S+)%[%d+%]")
+        if member_path then
+          member = '/dev/'..member_path
+        end
+        table.insert(members, member)
+      end
+      local active = table.remove(members, 1)
+      local level = "-"
+      if active == "active" then
+        level = table.remove(members, 1)
+      end
+
+      local size = tonumber(fs.readfile(string.format("/sys/class/block/%s/size", mdpath)))
+      local ss = tonumber(fs.readfile(string.format("/sys/class/block/%s/queue/logical_block_size", mdpath)))
+
+      device_info["path"] = "/dev/"..mdpath
+      device_info["size"] = size*ss
+      device_info["size_formated"] = byte_format(size*ss)
+      device_info["active"] = active:upper()
+      device_info["level"] = level
+      device_info["members"] = members
+      device_info["members_str"] = table.concat(members, ", ")
+
+      -- Get more info from output of mdadm --detail
+      local detail = mddetail(device_info["path"])
+      device_info["status"] = detail["State"]:upper()
+
+      raid_devices[mdpath] = device_info
+    end
+  end
+  mdstat:close()
+
+  return raid_devices
+end
+
 -- Collect Devices information
+  --[[ return:
+  {
+    sda={
+      path, model, inuse, size_formated,
+      partitions={ 
+        { name, inuse, size_formated }
+        ...
+      }
+    }
+    ..
+  }
+  --]]
 d.list_devices = function()
   local fs = require "nixio.fs"
 
@@ -297,14 +397,24 @@ d.list_devices = function()
   for i, bname in pairs(target_devnames) do
     local device_info = {}
     local device = "/dev/" .. bname
-    -- luci.util.perror(bname)
     local size = tonumber(fs.readfile(string.format("/sys/class/block/%s/size", bname)))
     local ss = tonumber(fs.readfile(string.format("/sys/class/block/%s/queue/logical_block_size", bname)))
     local model = fs.readfile(string.format("/sys/class/block/%s/device/model", bname))
+    local partitions = {}
+    for part in nixio.fs.glob("/sys/block/" .. bname .."/" .. bname .. "*") do
+      local pname = nixio.fs.basename(part)
+      local psize = byte_format(tonumber(nixio.fs.readfile(part .. "/size"))*ss)
+      local mount_point = get_mount_point(pname)
+      if mount_point then device_info["inuse"] = true end
+      table.insert(partitions, {name = pname, size_formated = psize, inuse = mount_point})
+    end
 
       device_info["path"] = device
       device_info["size_formated"] = byte_format(size*ss)
       device_info["model"] = model
+      device_info["partitions"] = partitions
+      -- true or false
+      device_info["inuse"] = device_info["inuse"] or get_mount_point(bname)
 
       local udevinfo = {}
       if luci.sys.exec("which udevadm") ~= "" then
@@ -320,6 +430,7 @@ d.list_devices = function()
       end
       devices[bname] = device_info
   end
+  -- luci.util.perror(luci.util.serialize_json(devices))
   return devices
 end
 
@@ -344,6 +455,74 @@ d.get_format_cmd = function()
     end
   end
   return result
+end
+
+d.create_raid = function(rname, rlevel, rmembers)
+  local mb = {}
+  for _, v in ipairs(rmembers) do
+    mb[v]=v
+  end
+  rmembers = {}
+  for _, v in pairs(mb) do
+    table.insert(rmembers, v)
+  end
+  if type(rname) == "string" then
+    if rname:match("^md%d-%s+") then
+      rname = "/dev/"..rname:match("^(md%d-)%s+")
+    elseif rname:match("^/dev/md%d-%s+") then
+      rname = "/dev/"..rname:match("^(/dev/md%d-)%s+")
+    elseif not rname:match("/") then
+      rname = "/dev/md/".. rname
+    else
+      return "ERR: Invalid raid name"
+    end
+  else
+    local mdnum = 0
+    for num=1,127 do
+      local md = io.open("/dev/md"..tostring(num), "r")
+      if md == nil then
+        mdnum = num
+        break
+      else
+        io.close(md)
+      end
+    end
+    if mdnum == 0 then return "ERR: Cannot find proper md number" end
+    rname = "/dev/md"..mdnum
+  end
+
+  if rlevel == "5" or rlevel == "6" then
+    if #rmembers < 3 then return "ERR: Not enough members" end
+  end
+  if rlevel == "10" then
+    if #rmembers < 4 then return "ERR: Not enough members" end
+  end
+  if #rmembers < 2 then return "ERR: Not enough members" end
+  local cmd = d.command.mdadm .. " --create "..rname.." --run --assume-clean --homehost=any --level=" .. rlevel .. " --raid-devices=" .. #rmembers .. " " .. table.concat(rmembers, " ")
+  local res = luci.util.exec(cmd)
+  return res
+end
+
+d.gen_mdadm_config = function()
+  if not nixio.fs.access("/etc/config/mdadm") then return end
+  local uci = require "luci.model.uci"
+  local x = uci.cursor()
+  -- delete all array sections
+  x:foreach("mdadm", "array", function(s) x:delete("mdadm",s[".name"]) end)
+  local cmd = d.command.mdadm .. " -D -s"
+  --ARRAY /dev/md1 metadata=1.2 name=any:1 UUID=f998ae14:37621b27:5c49e850:051f6813
+  --ARRAY /dev/md3 metadata=1.2 name=any:3 UUID=c068c141:4b4232ca:f48cbf96:67d42feb
+  for _, v in ipairs(luci.util.execl(cmd)) do
+    local device, uuid = v:match("^ARRAY%s-([^%s]+)%s-[^%s]-%s-[^%s]-%s-UUID=([^%s]+)%s-")
+    if device and uuid then
+      local section_name = x:add("mdadm", "array")
+      x:set("mdadm", section_name, "device", device)
+      x:set("mdadm", section_name, "uuid", uuid)
+    end
+  end
+  x:commit("mdadm")
+  -- enable mdadm
+  luci.util.exec("/etc/init.d/mdadm enable")
 end
 
 return d
