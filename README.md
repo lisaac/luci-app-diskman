@@ -31,3 +31,7 @@ make V=99
 ![](https://raw.githubusercontent.com/lisaac/luci-app-diskman/master/doc/disk_info.png)
 - Partitions Info
 ![](https://raw.githubusercontent.com/lisaac/luci-app-diskman/master/doc/partitions_info.png)
+
+### TODO
+- btrfs support
+- mergerfs & snapraid support
