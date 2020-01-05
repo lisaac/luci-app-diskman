@@ -31,12 +31,8 @@ function index()
   entry({"admin", "system", "diskman", "partition"}, form("diskman/partition"), nil).leaf = true
   entry({"admin", "system", "diskman", "get_disk_info"}, call("get_disk_info"), nil).leaf = true
   entry({"admin", "system", "diskman", "mk_p_table"}, call("mk_p_table"), nil).leaf = true
---   entry({"admin", "system", "diskman", "addpartition"}, call("action_addpartition"), nil).leaf = true
---   entry({"admin", "system", "diskman", "removepartition"}, call("action_removepartition"), nil).leaf = true
---   entry({"admin", "system", "diskman", "formatpartition"}, call("action_formatpartition"), nil).leaf = true
---   entry({"admin", "system", "diskman", "createraid"}, call("action_createraid"), nil).leaf = true
---   entry({"admin", "system", "diskman", "createpartitiontable"}, call("action_createpartitiontable"), nil).leaf = true
---   entry({"admin", "system", "diskman", "removepartitiontable"}, call("action_removepartitiontable"), nil).leaf = true
+  entry({"admin", "system", "diskman", "smartdetail"}, call("smart_detail"), nil).leaf = true
+  entry({"admin", "system", "diskman", "smartattr"}, call("smart_attr"), nil).leaf = true
 end
 
 function get_disk_info(dev)
@@ -83,5 +79,44 @@ function mk_p_table()
     luci.http.status(404, "not support")
     luci.http.prepare_content("application/json")
     luci.http.write_json({code="1"})
+  end
+end
+
+function smart_detail(dev)
+  luci.template.render("diskman/smart_detail", {dev=dev})
+end
+
+function smart_attr(dev)
+  local dm = require "luci.model.diskman"
+  local cmd = io.popen(dm.command.smartctl ..  " --attributes -d sat /dev/%s" % dev)
+  if cmd then
+    local attr = { }
+    while true do
+      local ln = cmd:read("*l")
+      if not ln then
+        break
+      elseif ln:match("^.*%d+%s+.+%s+.+%s+.+%s+.+%s+.+%s+.+%s+.+%s+.+%s+.+") then
+        local id,attrbute,flag,value,worst,thresh,type,updated,raw = ln:match("^%s*(%d+)%s+([%a%p]+)%s+(%w+)%s+(%d+)%s+(%d+)%s+(%d+)%s+([%a%p]+)%s+(%a+)%s+[%w%p]+%s+(.+)")
+        id= "%x" % id
+        if not id:match("^%w%w") then
+          id = "0%s" % id
+        end
+        attr[#attr+1]= {
+            id = id:upper(),
+            attrbute = attrbute,
+            flag  = flag,
+            value = value,
+            worst = worst,
+            thresh  = thresh,
+            type = type,
+            updated = updated,
+            raw  = raw
+          }
+      else
+      end
+    end
+  cmd:close()
+  luci.http.prepare_content("application/json")
+  luci.http.write_json(attr)
   end
 end
