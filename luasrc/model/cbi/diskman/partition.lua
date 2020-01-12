@@ -189,7 +189,7 @@ if not disk_info.p_table:match("Raid") then
   btn_format = s_partition_table:option(Button, "_format")
   btn_format.render = function(self, section, scope)
     if disk_info.partitions[section].mount_point == "-" and disk_info.partitions[section].number ~= -1 and disk_info.partitions[section].type ~= "extended" then
-      self.inputtitle = "Format"
+      self.inputtitle = translate("Format")
       self.template = "diskman/cbi/disabled_button"
       self.view_disabled = false
       self.inputstyle = "reset"
@@ -225,7 +225,7 @@ if not disk_info.p_table:match("Raid") then
     luci.http.redirect(luci.dispatcher.build_url("admin/system/diskman/partition/" .. dev))
   end
 
-  local btn_action = s_partition_table:option(Button, "_action", translate("Action"))
+  local btn_action = s_partition_table:option(Button, "_action")
   btn_action.forcewrite = true
   btn_action.template = "diskman/cbi/disabled_button"
   btn_action.render = function(self, section, scope)

@@ -32,6 +32,9 @@ make V=99
 - Partitions Info
 ![](https://raw.githubusercontent.com/lisaac/luci-app-diskman/master/doc/partitions_info.png)
 
+### Thanks
+- Chinese translation by [锤子](https://www.right.com.cn/forum/space-uid-311750.html)
+
 ### TODO
 - btrfs support
 - mergerfs & snapraid support
