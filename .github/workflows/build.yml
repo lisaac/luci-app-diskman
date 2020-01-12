@@ -45,7 +45,7 @@ jobs:
           wget -O /tmp/po2lmo/Makefile https://raw.githubusercontent.com/openwrt/luci/master/modules/luci-base/src/Makefile && \
           wget -O /tmp/po2lmo/template_lmo.h https://raw.githubusercontent.com/openwrt/luci/master/modules/luci-base/src/template_lmo.h && \
           wget -O /tmp/po2lmo/template_lmo.c https://raw.githubusercontent.com/openwrt/luci/master/modules/luci-base/src/template_lmo.c && \
-          cd /tmp/po2lmo && make po2lmo && cp po2lmo /usr/bin/ && chmod +x /usr/bin/po2lmo
+          cd /tmp/po2lmo && make po2lmo && sudo -E cp po2lmo /usr/bin/ && sudo -E chmod +x /usr/bin/po2lmo
           wget -O /tmp/ipkg-build https://raw.githubusercontent.com/openwrt/openwrt/master/scripts/ipkg-build && \
           chmod +x /tmp/ipkg-build && \
           /tmp/ipkg-build -o root -g root /tmp/luci-app-diskman /tmp
