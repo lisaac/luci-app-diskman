@@ -48,9 +48,23 @@
           } else if (item.nodeName == "DIV") {
             partitons_div = '<div class="tr cbi-section-table-row cbi-rowstyle-1"><div style="white-space:nowrap; position:absolute; width:100%">'
           }
+          let expand = 0
+          let need_expand = 0
+          disk_info.partitions.forEach((part) => {
+            let p = part.size / disk_info.size * 100
+            if (p <= 8) {
+              expand += 8
+              need_expand += p
+              part.part_percent = 8
+            }
+          })
           let n = 0
           disk_info.partitions.forEach((part) => {
-            let part_percent = part.size / disk_info.size * 100 + '%'
+            let p = part.size / disk_info.size * 100
+            if (p > 8) {
+              part.part_percent = p * (100 - expand) / (100 - need_expand)
+            }
+            let part_percent = part.part_percent + '%'
             let p_color = p_colors[n++]
             if (n > 4) { n = 0 }
             let inline_txt = (part.name != '-' && part.name || '') + ' ' + (part.fs != 'Free Space' && part.fs || '') + ' ' + part.size_formated + ' ' + (part.useage != '-' && part.useage || '')
