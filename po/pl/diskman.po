@@ -47,7 +47,7 @@ msgid "Eject"
 msgstr "Wysuń"
 
 msgid "New"
-msgstr "Nowy"
+msgstr "Nowy(a)"
 
 msgid "Remove"
 msgstr "Usuń"
@@ -125,4 +125,4 @@ msgid "Partitions Info"
 msgstr "Informacja o Partycjach"
 
 msgid "Default 2048 sector alignment, support +size{b,k,m,g,t} in End Sector"
-msgstr "Domyślne 2048 ustawienie sektora, obsługiwane +rozmiar{b,k,m,g,t} w Sektorze Końcowym"
+msgstr "Domyślnie 2048 ustawienie sektora, obsługiwane +rozmiar{b,k,m,g,t} w Sektorze Końcowym"
