@@ -29,7 +29,9 @@ jobs:
           wget -O /tmp/po2lmo/Makefile https://raw.githubusercontent.com/openwrt/luci/master/modules/luci-base/src/Makefile && \
           wget -O /tmp/po2lmo/template_lmo.h https://raw.githubusercontent.com/openwrt/luci/master/modules/luci-base/src/template_lmo.h && \
           wget -O /tmp/po2lmo/template_lmo.c https://raw.githubusercontent.com/openwrt/luci/master/modules/luci-base/src/template_lmo.c && \
-          cd /tmp/po2lmo && make po2lmo && ./po2lmo $GITHUB_WORKSPACE/po/zh-cn/diskman.po /tmp/luci-app-diskman/usr/lib/lua/luci/i18n/diskman.zh-cn.lmo
+          cd /tmp/po2lmo && make po2lmo && \
+          ./po2lmo $GITHUB_WORKSPACE/po/zh-cn/diskman.po /tmp/luci-app-diskman/usr/lib/lua/luci/i18n/diskman.zh-cn.lmo && \
+          ./po2lmo $GITHUB_WORKSPACE/po/pl/diskman.po /tmp/luci-app-diskman/usr/lib/lua/luci/i18n/diskman.pl.lmo && \
           mkdir -p /tmp/luci-app-diskman/CONTROL
           cat >/tmp/luci-app-diskman/CONTROL/control <<EOF
           Package: luci-app-diskman
