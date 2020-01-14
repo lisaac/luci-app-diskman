@@ -131,4 +131,4 @@ msgid "Partitions Info"
 msgstr "Informacja o partycjach"
 
 msgid "Default 2048 sector alignment, support +size{b,k,m,g,t} in End Sector"
-msgstr "Domyślnie obsługiwane ustawienie sektora początkowego: 2048 +rozmiar w sektorze końcowym {b,k,m,g,t}"
+msgstr "Domyślne obsługiwane ustawienie sektora początkowego: 2048 +rozmiar w sektorze końcowym {b,k,m,g,t}"
