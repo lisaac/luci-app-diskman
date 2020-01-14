@@ -5,7 +5,7 @@ msgid "DiskMan"
 msgstr "Menadżer dysków"
 
 msgid "Manage Disks over LuCI."
-msgstr "Zarządzaj dyskami przez LuCI."
+msgstr "Zarządzaj dyskami przez LuCI"
 
 msgid "Rescan Disks"
 msgstr "Skanuj dyski"
@@ -23,7 +23,7 @@ msgid "Temp"
 msgstr "Temperatura"
 
 msgid "Partition Table"
-msgstr "Tabela partycji"
+msgstr "Tablica partycji"
 
 msgid "SATA Version"
 msgstr "Wersja SATA"
@@ -47,10 +47,10 @@ msgid "Eject"
 msgstr "Wysuń"
 
 msgid "New"
-msgstr "Nowa(y)"
+msgstr "Nowa"
 
 msgid "Remove"
-msgstr "Usuń"
+msgstr "Wysuń"
 
 msgid "Format"
 msgstr "Formatuj"
@@ -65,7 +65,7 @@ msgid "Useage"
 msgstr "Użycie"
 
 msgid "Model"
-msgstr "Model"
+msgstr "Model urządzenia"
 
 msgid "Size"
 msgstr "Rozmiar"
@@ -94,12 +94,6 @@ msgstr "Członkowie"
 msgid "Active"
 msgstr "Aktywny"
 
-msgid "Action"
-msgstr "Operacja"
-
-msgid "Standby"
-msgstr "Uśpiony"
-
 msgid "RAID Creation"
 msgstr "Kreator RAID"
 
@@ -119,7 +113,7 @@ msgid "Partition Management"
 msgstr "Menadżer partycji"
 
 msgid "Partition Disk over LuCI."
-msgstr "Zarządzaj partycjami przez LuCI."
+msgstr "Zarządzaj partycjami przez LuCI"
 
 msgid "Device Info"
 msgstr "Informacja o urządzeniu"
