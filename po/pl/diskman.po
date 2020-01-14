@@ -94,6 +94,12 @@ msgstr "Członkowie"
 msgid "Active"
 msgstr "Aktywny"
 
+msgid "Action"
+msgstr "Operacja"
+
+msgid "Standby"
+msgstr "Uśpiony"
+
 msgid "RAID Creation"
 msgstr "Kreator RAID"
 
