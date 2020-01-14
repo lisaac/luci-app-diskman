@@ -53,7 +53,7 @@ msgid "Remove"
 msgstr "Usuń"
 
 msgid "Format"
-msgstr "Format"
+msgstr "Formatuj"
 
 msgid "Start Sector"
 msgstr "Sektor początkowy"
