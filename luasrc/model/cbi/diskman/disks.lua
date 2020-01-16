@@ -29,7 +29,7 @@ rescan_button.forcewrite = true
 rescan_button.write = function(self, section, value)
   luci.util.exec("echo '- - -' | tee /sys/class/scsi_host/host*/scan > /dev/null")
   if dm.command.mdadm then
-    luci.util.exec(d.command.mdadm .. " --assemble --scan")
+    luci.util.exec(dm.command.mdadm .. " --assemble --scan")
   end
   luci.http.redirect(luci.dispatcher.build_url("admin/system/diskman"))
 end
