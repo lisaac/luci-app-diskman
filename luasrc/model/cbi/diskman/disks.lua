@@ -224,7 +224,7 @@ local btn_umount = table_mp:option(Button, "_mount", translate("Mount"))
 btn_umount.forcewrite = true
 btn_umount.render = function(self, section, scope)
   if mount_point[section].device == 0 then
-    self.inputtitle = " "..translate("Mount").." "
+    self.inputtitle = translate("Mount")
     btn_umount.inputstyle = "add"
   else
     self.inputtitle = translate("Umount")
@@ -234,10 +234,10 @@ btn_umount.render = function(self, section, scope)
 end
 btn_umount.write = function(self, section, value)
   local res
-  if value == " Mount " then
+  if value == translate("Mount") then
     luci.util.exec("mkdir -p ".. _mount_point.mount_point)
     res = luci.util.exec("mount ".. _mount_point.device .. (_mount_point.fs and (" -t ".. _mount_point.fs )or "") .. (_mount_point.mount_options and (" -o " .. _mount_point.mount_options) or  " ").._mount_point.mount_point .. " 2>&1")
-  else
+  elseif value == translate("Umount") then
     res = luci.util.exec("umount "..mount_point[section].mount_point .. " 2>&1")
   end
   if res:match("^mount:") then
