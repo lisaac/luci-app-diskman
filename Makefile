@@ -40,6 +40,7 @@ define Package/$(PKG_NAME)/install
 	# cp -pR ./root/* $(1)/
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
 	po2lmo ./po/zh-cn/diskman.po $(1)/usr/lib/lua/luci/i18n/diskman.zh-cn.lmo
+	po2lmo ./po/pl/diskman.po $(1)/usr/lib/lua/luci/i18n/diskman.pl.lmo
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
