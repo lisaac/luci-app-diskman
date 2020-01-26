@@ -199,6 +199,8 @@ v_mount_option.render = function(self, section, scope)
     Value.render(self, section, scope)
   else
     self.template = "cbi/dvalue"
+    self.m_title = mount_point[section].mount_options
+    mount_point[section].mount_options = #mount_point[section].mount_options > 50 and mount_point[section].mount_options:sub(1,50) .. "..." or mount_point[section].mount_options
     DummyValue.render(self, section, scope)
   end
 end
@@ -214,6 +216,7 @@ v_mount_point.render = function(self, section, scope)
     Value.render(self, section, scope)
   else
     self.template = "cbi/dvalue"
+    self.m_title = mount_point[section].mount_point
     DummyValue.render(self, section, scope)
   end
 end
