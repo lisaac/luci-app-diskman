@@ -1,6 +1,5 @@
 # DiskMan for LuCI (WIP)
-A Simple Disk Manager for LuCI, support disk partition and format, support raid/btrfs-raid(WIP), based on [luci-app-diskmanager](http://eko.one.pl/forum/viewtopic.php?id=18669)
-
+A Simple Disk Manager for LuCI, support disk partition and format, support raid/btrfs-raid(WIP)
 ### Depends
 - [parted](https://github.com/lisaac/luci-app-diskman/blob/master/Parted.Makefile)
 - blkid
@@ -32,7 +31,9 @@ make V=99
 - Partitions Info
 ![](https://raw.githubusercontent.com/lisaac/luci-app-diskman/master/doc/partitions_info.png)
 
-### Thanks
+### Thanks To
+- [luci-app-diskmanager](http://eko.one.pl/forum/viewtopic.php?id=18669)
+- [luci-app-smartinfo](https://github.com/animefansxj/luci-app-smartinfo)
 - Chinese translation by [锤子](https://www.right.com.cn/forum/space-uid-311750.html)
 
 ### TODO
