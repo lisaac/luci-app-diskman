@@ -15,7 +15,7 @@ local uuid = arg[1]
 
 if not uuid then luci.http.redirect(luci.dispatcher.build_url("admin/system/diskman")) end
 
-m = SimpleForm("btrfs", translate("Btrfs"), translate("Manage Btrfs."))
+m = SimpleForm("btrfs", translate("Btrfs"), translate("Manage Btrfs"))
 m.submit = false
 m.reset = false
 m.redirect = luci.dispatcher.build_url("admin/system/diskman")
@@ -126,7 +126,7 @@ end
 -- end
 
 -- new snapshots
-local s_snapshot = m:section(SimpleSection, "New Snapshot")
+local s_snapshot = m:section(SimpleSection, translate("New Snapshot"))
 local value_sorce, value_dest, value_readonly
 local v_sorce = s_snapshot:option(Value, "_source", translate("Source Path"))
 v_sorce.placeholder = "/data"
@@ -148,7 +148,7 @@ v_dest.write = function(self, section, value)
 end
 local btn_snp_create = s_snapshot:option(Button, "_snp_create")
 btn_snp_create.title = " "
-btn_snp_create.inputtitle = translate("Create Snapshot")
+btn_snp_create.inputtitle = translate("New Snapshot")
 btn_snp_create.inputstyle = "add"
 btn_snp_create.write = function(self, section, value)
   if value_sorce and value_sorce:match("^/") then

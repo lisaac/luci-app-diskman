@@ -538,7 +538,7 @@ d.gen_mdadm_config = function()
 end
 
 -- list btrfs filesystem device
--- {uuid={uuid, label, devices, size, used}...}
+-- {uuid={uuid, label, members, size, used}...}
 d.list_btrfs_devices = function()
   local btrfs_device = {}
   if not d.command.btrfs then return btrfs_device end
@@ -561,7 +561,7 @@ d.list_btrfs_devices = function()
     if size and device then
       btrfs_device[_uuid]["size"] = btrfs_device[_uuid]["size"] and btrfs_device[_uuid]["size"] + tonumber(size) or tonumber(size)
       btrfs_device[_uuid]["size_formated"] = byte_format(btrfs_device[_uuid]["size"])
-      btrfs_device[_uuid]["devices"] = btrfs_device[_uuid]["devices"] and btrfs_device[_uuid]["devices"]..", "..device or device
+      btrfs_device[_uuid]["members"] = btrfs_device[_uuid]["members"] and btrfs_device[_uuid]["members"]..", "..device or device
     end
   end
   return btrfs_device
