@@ -37,5 +37,4 @@ make V=99
 - Chinese translation by [锤子](https://www.right.com.cn/forum/space-uid-311750.html)
 
 ### TODO
-- btrfs support
 - mergerfs & snapraid support
