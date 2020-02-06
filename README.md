@@ -35,6 +35,3 @@ make V=99
 - [luci-app-diskmanager](http://eko.one.pl/forum/viewtopic.php?id=18669)
 - [luci-app-smartinfo](https://github.com/animefansxj/luci-app-smartinfo)
 - Chinese translation by [锤子](https://www.right.com.cn/forum/space-uid-311750.html)
-
-### TODO
-- mergerfs & snapraid support
