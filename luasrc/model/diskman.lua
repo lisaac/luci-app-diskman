@@ -661,18 +661,25 @@ if not snapshot then
     if not section_snap then
       if not _uuid then
         _uuid = line:match("^%s-UUID:%s+([^%s]+)")
-      elseif not otime then
+      elseif not _otime then
         _otime = line:match("^%s+Creation time:%s+(.+)")
       elseif not _id then
         _id = line:match("^%s+Subvolume ID:%s+([^%s]+)")
       elseif line:match("^%s+(Snapshot%(s%):)") then
-        section_snap = "true"
+        section_snap = true
       end
     else
       local snapshot = line:match("^%s+(.+)")
-      _snap = _snap and (_snap ..", /".. snapshot) or ("/"..snapshot)
+      if snapshot then
+        _snap = _snap and (_snap ..", /".. snapshot) or ("/"..snapshot)
+      end
     end
   end
+  luci.util.perror(_uuid)
+  luci.util.perror(_otime)
+  luci.util.perror(_id)
+  luci.util.perror(_snap)
+  luci.util.perror(_uuid)
   if _uuid and _otime and _id then
     subvolume["0".._id] = {id = _id , uuid = _uuid, otime = _otime, snapshots = _snap, path = "/"}
     if default_subvolume_id == _id then
