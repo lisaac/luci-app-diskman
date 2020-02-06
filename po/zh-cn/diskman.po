@@ -61,8 +61,14 @@ msgstr "起始扇区"
 msgid "End Sector"
 msgstr "中止扇区"
 
-msgid "Useage"
-msgstr "使用情况"
+msgid "Usage"
+msgstr "用量"
+
+msgid "Used"
+msgstr "已使用"
+
+msgid "Free Space"
+msgstr "空闲空间"
 
 msgid "Model"
 msgstr "主机型号"
@@ -180,3 +186,12 @@ msgstr "创建"
 
 msgid "Destination Path (optional)"
 msgstr "目标目录（可选）"
+
+msgid "Metadata"
+msgstr "元数据"
+
+msgid "Data"
+msgstr "数据"
+
+msgid "Btrfs Info"
+msgstr "Btrfs 信息"

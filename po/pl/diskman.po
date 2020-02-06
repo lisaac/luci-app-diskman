@@ -61,7 +61,7 @@ msgstr "Sektor początkowy"
 msgid "End Sector"
 msgstr "Sektor końcowy"
 
-msgid "Useage"
+msgid "Usage"
 msgstr "Użycie"
 
 msgid "Model"

@@ -86,8 +86,9 @@ if dm.command.btrfs then
   table_btrfs:option(DummyValue, "uuid", translate("UUID"))
   table_btrfs:option(DummyValue, "label", translate("Label"))
   table_btrfs:option(DummyValue, "members", translate("Members"))
-  table_btrfs:option(DummyValue, "size_formated", translate("Size"))
-  table_btrfs:option(DummyValue, "used_formated", translate("Useage"))
+  -- sieze is error, since there is RAID
+  -- table_btrfs:option(DummyValue, "size_formated", translate("Size"))
+  table_btrfs:option(DummyValue, "used_formated", translate("Usage"))
   table_btrfs.extedit  = luci.dispatcher.build_url("admin/system/diskman/btrfs/%s")
 end
 

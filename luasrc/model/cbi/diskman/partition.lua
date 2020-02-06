@@ -37,7 +37,7 @@ s:option(DummyValue, "path", translate("Path"))
 s:option(DummyValue, "model", translate("Model"))
 s:option(DummyValue, "sn", translate("Serial Number"))
 s:option(DummyValue, "size_formated", translate("Size"))
-s:option(DummyValue, "sec_size", translate("Sector Size "))
+s:option(DummyValue, "sec_size", translate("Sector Size"))
 local dv_p_table = s:option(ListValue, "p_table", translate("Partition Table"))
 dv_p_table.render = function(self, section, scope)
   -- create table only if not used by raid and no partitions on disk
@@ -161,7 +161,9 @@ if not disk_info.p_table:match("Raid") then
   if disk_info.p_table == "MBR" then
     s_partition_table:option(DummyValue, "type", translate("Type"))
   end
-  s_partition_table:option(DummyValue, "useage", translate("Useage"))
+  s_partition_table:option(DummyValue, "used_formated", translate("Used"))
+  s_partition_table:option(DummyValue, "free_formated", translate("Free Space"))
+  s_partition_table:option(DummyValue, "usage", translate("Usage"))
   s_partition_table:option(DummyValue, "mount_point", translate("Mount Point"))
   local val_fs = s_partition_table:option(Value, "fs", translate("File System"))
   val_fs.forcewrite = true
