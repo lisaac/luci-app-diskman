@@ -2,7 +2,7 @@ msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8\n"
 
 msgid "DiskMan"
-msgstr "DiskMan磁盘管理"
+msgstr "DiskMan 磁盘管理"
 
 msgid "Manage Disks over LuCI."
 msgstr "通过LuCI管理磁盘"

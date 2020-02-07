@@ -16,7 +16,7 @@ end
 
 local mounts = nixio.fs.readfile("/proc/mounts") or ""
 local swaps = nixio.fs.readfile("/proc/swaps") or ""
-local df = luci.sys.exec(d.command.df .. " -B1") or ""
+local df = luci.sys.exec(d.command.df) or ""
 
 function byte_format(byte)
   local suff = {"B", "KB", "MB", "GB", "TB"}
@@ -143,8 +143,8 @@ local get_partition_usage = function(partition)
   local used, free, usage = df:match("\n/dev/" .. partition .. "%s+%d+%s+(%d+)%s+(%d+)%s+(%d+)%%%s-")
 
   usage = usage and (usage .. "%") or "-"
-  used = used and tonumber(used) or 0
-  free = free and tonumber(free) or 0
+  used = used and (tonumber(used) * 1024) or 0
+  free = free and (tonumber(free) * 1024) or 0
 
   return used, free, usage
 end
