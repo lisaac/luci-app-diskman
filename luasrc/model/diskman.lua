@@ -14,6 +14,9 @@ for _, cmd in ipairs(CMD) do
     d.command[cmd] = command:match("^.+"..cmd) or nil
 end
 
+d.command.mount = nixio.fs.access("/usr/bin/mount") and "/usr/bin/mount" or "/bin/mount"
+d.command.umount = nixio.fs.access("/usr/bin/umount") and "/usr/bin/umount" or "/bin/umount"
+
 local mounts = nixio.fs.readfile("/proc/mounts") or ""
 local swaps = nixio.fs.readfile("/proc/swaps") or ""
 local df = luci.sys.exec(d.command.df) or ""
@@ -670,11 +673,6 @@ if not snapshot then
       end
     end
   end
-  luci.util.perror(_uuid)
-  luci.util.perror(_otime)
-  luci.util.perror(_id)
-  luci.util.perror(_snap)
-  luci.util.perror(_uuid)
   if _uuid and _otime and _id then
     subvolume["0".._id] = {id = _id , uuid = _uuid, otime = _otime, snapshots = _snap, path = "/"}
     if default_subvolume_id == _id then
