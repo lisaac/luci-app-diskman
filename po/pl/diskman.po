@@ -149,7 +149,7 @@ msgid "New Snapshot"
 msgstr "Nowy obraz"
 
 msgid "SubVolumes"
-msgstr "Podwolumeny"
+msgstr "Sub-wolumeny"
 
 msgid "Top Level"
 msgstr "Top Level"
@@ -200,7 +200,7 @@ msgid "Please input Source Path of snapshot, Source Path must start with '/'"
 msgstr "Proszę podać ścieżkę źródłową dla obrazu, ścieżka musi zaczynać się od '/'"
 
 msgid "Please input Subvolume Path, Subvolume must start with '/'"
-msgstr "Proszę podać ścieżkę dla podwolumenu, podwolumen musi zaczynać się od '/'"
+msgstr "Proszę podać ścieżkę dla sub-wolumenu, sub-wolumen musi zaczynać się od '/'"
 
 msgid "is in use! please unmount it first!"
 msgstr "aktualnie jest w użyciu, proszę najpierw odmontować！"
