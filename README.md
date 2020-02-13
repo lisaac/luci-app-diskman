@@ -6,6 +6,7 @@ A Simple Disk Manager for LuCI, support disk partition and format, support raid/
 - smartmontools
 - e2fsprogs
 - btrfs-progs (Optional)
+- lsblk (Optional)
 - mdadm (Optional)
     - kmod-md-raid456 (Optional)
     - kmod-md-linear (Optional)
