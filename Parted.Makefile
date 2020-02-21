@@ -17,11 +17,12 @@ PKG_MD5SUM:=090655d05f3c471aa8e15a27536889ec
 
 include $(INCLUDE_DIR)/package.mk
 define Package/parted
-  SECTION:=utils
-  CATEGORY:=Utilities
-  TITLE:=parted Partition editor
-  URL:=http://www.gnu.org/software/parted/index.shtml
-  DEPENDS:= +libuuid +libreadline +libncurses +libblkid
+	SECTION:=utils
+	CATEGORY:=Utilities
+	SUBMENU:=Disc
+	TITLE:=parted Partition editor
+	URL:=http://www.gnu.org/software/parted/index.shtml
+	DEPENDS:= +libuuid +libreadline +libncurses +libblkid
 endef
 
 define Package/parted/description
