@@ -51,7 +51,7 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
 	$$(foreach po,$$(shell find $(PKG_BUILD_DIR)/po/*/*.po), \
 		po2lmo $$(po) \
-		$(1)/usr/lib/lua/luci/i18n/dockerman.$$(shell echo $$(po) | awk -F'/' '{print $$$$(NF-1)}').lmo;)
+		$(1)/usr/lib/lua/luci/i18n/diskman.$$(shell echo $$(po) | awk -F'/' '{print $$$$(NF-1)}').lmo;)
 	#po2lmo $(PKG_BUILD_DIR)/po/zh-cn/diskman.po $(1)/usr/lib/lua/luci/i18n/diskman.zh-cn.lmo
 endef
 
