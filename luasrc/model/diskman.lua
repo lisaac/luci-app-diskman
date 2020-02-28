@@ -18,9 +18,9 @@ d.command.mount = nixio.fs.access("/usr/bin/mount") and "/usr/bin/mount" or "/bi
 d.command.umount = nixio.fs.access("/usr/bin/umount") and "/usr/bin/umount" or "/bin/umount"
 
 local proc_mounts = nixio.fs.readfile("/proc/mounts") or ""
-local mounts = luci.util.exec(d.command.mount) or ""
+local mounts = luci.util.exec(d.command.mount .. " 2>/dev/null") or ""
 local swaps = nixio.fs.readfile("/proc/swaps") or ""
-local df = luci.sys.exec(d.command.df) or ""
+local df = luci.sys.exec(d.command.df .. " 2>/dev/null") or ""
 
 function byte_format(byte)
   local suff = {"B", "KB", "MB", "GB", "TB"}
