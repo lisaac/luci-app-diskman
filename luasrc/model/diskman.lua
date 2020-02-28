@@ -117,7 +117,7 @@ local get_mount_point = function(partition)
   local mount_point, dk_root_dir
   -- if use luci-in-dokcer, exclude the docker overlay mounts
   -- if ver.distname == "LuCI in Docker" then
-    local _o, dk = pcall(require,"luci.docker")
+    local _o, dk = pcall(require,"luci.model.docker")
     if _o and dk then
       dk_root_dir = dk.new():info().body.DockerRootDir
     end
@@ -281,7 +281,7 @@ d.get_mount_points = function()
   local mount, dk_root_dir
   local res = {}
   local h ={"device", "mount_point", "fs", "mount_options", "dump", "pass"}
-  local _o, dk = pcall(require,"luci.docker")
+  local _o, dk = pcall(require,"luci.model.docker")
   if _o and dk then
     dk_root_dir = dk.new():info().body.DockerRootDir
   end
