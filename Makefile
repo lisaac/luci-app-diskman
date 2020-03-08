@@ -40,7 +40,14 @@ define Package/$(PKG_NAME)
 	SUBMENU:=3. Applications
 	TITLE:=Disk Manager interface for LuCI
 	PKGARCH:=all
-	DEPENDS:=+e2fsprogs +parted +smartmontools +blkid +PACKAGE_$(PKG_NAME)_INCLUDE_btrfs_progs:btrfs-progs +PACKAGE_$(PKG_NAME)_INCLUDE_lsblk:lsblk +PACKAGE_$(PKG_NAME)_INCLUDE_mdadm:mdadm +PACKAGE_$(PKG_NAME)_INCLUDE_kmod_md_raid456:kmod-md-raid456 +PACKAGE_$(PKG_NAME)_INCLUDE_kmod_md_linears:kmod-md-linear
+	DEPENDS:=+e2fsprogs +parted +smartmontools +blkid \
+	+PACKAGE_$(PKG_NAME)_INCLUDE_btrfs_progs:btrfs-progs \
+	+PACKAGE_$(PKG_NAME)_INCLUDE_lsblk:lsblk \
+	+PACKAGE_$(PKG_NAME)_INCLUDE_mdadm:mdadm \
+	+PACKAGE_$(PKG_NAME)_INCLUDE_kmod_md_raid456:kmod-md-mod \
+	+PACKAGE_$(PKG_NAME)_INCLUDE_kmod_md_raid456:kmod-md-raid456 \
+	+PACKAGE_$(PKG_NAME)_INCLUDE_kmod_md_linears:kmod-md-mod \
+	+PACKAGE_$(PKG_NAME)_INCLUDE_kmod_md_linears:kmod-md-linear
 endef
 
 define Package/$(PKG_NAME)/description
