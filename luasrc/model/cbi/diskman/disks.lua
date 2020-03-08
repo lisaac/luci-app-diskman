@@ -8,7 +8,7 @@ require("luci.tools.webadmin")
 local dm = require "luci.model.diskman"
 
 -- Use (non-UCI) SimpleForm since we have no related config file
-m = SimpleForm("diskman", translate("DiskMan"), translate("Manage Disks over LuCI."))
+m = SimpleForm("diskman", translate("Disk Man"), translate("Manage Disks over LuCI."))
 m.template = "diskman/cbi/xsimpleform"
 -- m:append(Template("diskman/disk_info"))
 -- disable submit and reset button
@@ -265,6 +265,7 @@ btn_umount.render = function(self, section, scope)
 end
 btn_umount.write = function(self, section, value)
   local res
+  if not _mount_point.mount_point or not _mount_point.device then return end
   if value == translate("Mount") then
     luci.util.exec("mkdir -p ".. _mount_point.mount_point)
     res = luci.util.exec(dm.command.mount .. " ".. _mount_point.device .. (_mount_point.fs and (" -t ".. _mount_point.fs )or "") .. (_mount_point.mount_options and (" -o " .. _mount_point.mount_options.. " ") or  " ").._mount_point.mount_point .. " 2>&1")
