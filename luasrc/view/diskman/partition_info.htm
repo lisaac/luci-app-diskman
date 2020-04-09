@@ -1,7 +1,7 @@
 <script type="text/javascript">//<![CDATA[
   function show_detail(dev, e) {
     e.preventDefault()
-    window.open('<%=luci.dispatcher.build_url("admin", "system", "diskman", "smartdetail")%>/' + dev,
+    window.open('<%=luci.dispatcher.build_url("admin/system/diskman/smartdetail")%>/' + dev,
       'newwindow', 'height=480,width=800,top=100,left=200,toolbar=no,menubar=no,scrollbars=yes, resizable=no,location=no, status=no')
   }
   window.onload = function () {
@@ -14,7 +14,7 @@
       if (btn_p_table_index != btn_p_table_raw_index) {
         if (confirm("Warnning !! \nTHIS WILL OVERWRITE EXISTING PARTITIONS!! \nModify the partition table?")) {
           let p_table = btn_p_table.options[btn_p_table_index].value
-          XHR.get('<%=luci.dispatcher.build_url("admin", "system", "diskman", "mk_p_table")%>', { dev: val_name, p_table: p_table }, (x, res) => {
+          XHR.get('<%=luci.dispatcher.build_url("admin/system/diskman/mk_p_table")%>', { dev: val_name, p_table: p_table }, (x, res) => {
             if (res.code == 0) {
               location.reload();
             }
