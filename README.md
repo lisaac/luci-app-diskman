@@ -1,4 +1,9 @@
 # Luci-app-diskman
+
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/lisaac/luci-app-diskman?style=flat-square)
+![GitHub stars](https://img.shields.io/github/stars/lisaac/luci-app-diskman?style=flat-square)
+![GitHub forks](https://img.shields.io/github/forks/lisaac/luci-app-diskman?style=flat-square)
+![GitHub](https://img.shields.io/github/license/lisaac/luci-app-diskman?style=flat-square)
 - A Simple Disk Manager for LuCI, support disk partition and format, support raid / btrfs-raid / btrfs-snapshot
 - 一个简单的磁盘管理 LuCI 插件，支持磁盘分区、格式化，支持 RAID / btrfs-raid / btrfs-快照管理
 - [Download / 下载 ipk](https://github.com/lisaac/luci-app-diskman/releases)
