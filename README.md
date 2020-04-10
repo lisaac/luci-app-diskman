@@ -1,6 +1,10 @@
-# DiskMan for LuCI (WIP)
-A Simple Disk Manager for LuCI, support disk partition and format, support raid/btrfs-raid(WIP)
-### Depends
+# Luci-app-diskman
+- A Simple Disk Manager for LuCI, support disk partition and format, support raid / btrfs-raid / btrfs-snapshot
+- 一个简单的磁盘管理 LuCI 插件，支持磁盘分区、格式化，支持 RAID / btrfs-raid / btrfs-快照管理
+- [Download / 下载 ipk](https://github.com/lisaac/luci-app-diskman/releases)
+- [TG 群组](https://t.me/joinchat/G5mqjhrlU9S8TMkXeBmj0w)
+
+## Depends / 依赖
 - [parted](https://github.com/lisaac/luci-app-diskman/blob/master/Parted.Makefile)
 - blkid
 - smartmontools
@@ -11,7 +15,7 @@ A Simple Disk Manager for LuCI, support disk partition and format, support raid/
     - kmod-md-raid456 (Optional)
     - kmod-md-linear (Optional)
 
-### Compile
+## Compile / 编译
 ``` bash
 mkdir -p package/luci-app-diskman && \
 wget https://raw.githubusercontent.com/lisaac/luci-app-diskman/master/Makefile -O package/luci-app-diskman/Makefile
@@ -28,13 +32,13 @@ make V=99
 
 ```
 
-### Screenshot
+## Screenshot / 截图
 - Disk Info
 ![](https://raw.githubusercontent.com/lisaac/luci-app-diskman/master/doc/disk_info.png)
 - Partitions Info
 ![](https://raw.githubusercontent.com/lisaac/luci-app-diskman/master/doc/partitions_info.png)
 
-### Thanks To
+## Thanks / 谢致
 - [luci-app-diskmanager](http://eko.one.pl/forum/viewtopic.php?id=18669)
 - [luci-app-smartinfo](https://github.com/animefansxj/luci-app-smartinfo)
 - Chinese translation by [锤子](https://www.right.com.cn/forum/space-uid-311750.html)
