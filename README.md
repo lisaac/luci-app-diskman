@@ -3,11 +3,11 @@
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/lisaac/luci-app-diskman?style=flat-square)](https://github.com/lisaac/luci-app-diskman/releases)
 [![GitHub stars](https://img.shields.io/github/stars/lisaac/luci-app-diskman?style=flat-square)](https://github.com/lisaac/luci-app-diskman/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/lisaac/luci-app-diskman?style=flat-square)](https://github.com/lisaac/luci-app-diskman/network/members)
-[![GitHub](https://img.shields.io/github/license/lisaac/luci-app-diskman?style=flat-square)](https://github.com/lisaac/luci-app-diskman/blob/master/LICENSE)
+[![License](https://img.shields.io/github/license/lisaac/luci-app-diskman?style=flat-square)](https://github.com/lisaac/luci-app-diskman/blob/master/LICENSE)
+[![Telegram Group](https://img.shields.io/badge/telegam-group-_?style=flat-square)](https://t.me/joinchat/G5mqjhrlU9S8TMkXeBmj0w)
 - A Simple Disk Manager for LuCI, support disk partition and format, support raid / btrfs-raid / btrfs-snapshot
 - 一个简单的磁盘管理 LuCI 插件，支持磁盘分区、格式化，支持 RAID / btrfs-raid / btrfs-快照管理
 - [Download / 下载 ipk](https://github.com/lisaac/luci-app-diskman/releases)
-- [TG 群组](https://t.me/joinchat/G5mqjhrlU9S8TMkXeBmj0w)
 
 ## Depends / 依赖
 - [parted](https://github.com/lisaac/luci-app-diskman/blob/master/Parted.Makefile)
