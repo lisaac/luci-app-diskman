@@ -107,10 +107,10 @@ end
 
 function smart_attr(dev)
   local dm = require "luci.model.diskman"
-  local cmd = io.popen(dm.command.smartctl ..  " --attributes /dev/%s" % dev)
+  local cmd = io.popen(dm.command.smartctl ..  " -H -A -i /dev/%s" % dev)
   if cmd then
     local attr = { }
-    if dev:match("nvme")then
+    if cmd:match("NVMe Version:")then
       while true do
         local ln = cmd:read("*l")
         if not ln then

@@ -40,7 +40,7 @@ local get_smart_info = function(device)
     local attrib, val
     if section == 1 then
         attrib, val = line:match "^(.-):%s+(.+)"
-    elseif section == 2 and device:match("nvme") then
+    elseif section == 2 and smart_info.nvme_ver then
       attrib, val = line:match("^(.-):%s+(.+)")
       if not smart_info.health then smart_info.health = line:match(".-overall%-health.-: (.+)") end
     elseif section == 2 then
@@ -79,6 +79,8 @@ local get_smart_info = function(device)
       smart_info.rota_rate = val
     elseif attrib == "SATA Version is" then
       smart_info.sata_ver = val
+    elseif attrib == "NVMe Version" then
+      smart_info.nvme_ver = val
     end
   end
   return smart_info
@@ -244,7 +246,7 @@ local get_parted_info = function(device)
       end
     end
   end
-  result = disk_temp
+  result = disk_temp or result
   result.partitions = partitions_temp
 
   return result
@@ -311,7 +313,7 @@ d.get_disk_info = function(device, wakeup)
     disk_info = get_parted_info(device)
     disk_info["sec_size"] = disk_info["logic_sec"] .. "/" .. disk_info["phy_sec"]
     disk_info["size_formated"] = byte_format(tonumber(disk_info["size"]))
-    -- if status is standby, then get smart_info again
+    -- if status is standby, after get part info, the disk is weakuped, then get smart_info again for more informations
     if smart_info.status ~= "ACTIVE" then smart_info = get_smart_info(device) end
   else
     disk_info = {}
@@ -472,6 +474,18 @@ d.get_format_cmd = function()
   return result
 end
 
+d.find_free_md_device = function()
+  for num=0,127 do
+    local md = io.open("/dev/md"..tostring(num), "r")
+    if md == nil then
+      return "/dev/md"..tostring(num)
+    else
+      io.close(md)
+    end
+  end
+  return nil
+end
+
 d.create_raid = function(rname, rlevel, rmembers)
   local mb = {}
   for _, v in ipairs(rmembers) do
@@ -492,18 +506,8 @@ d.create_raid = function(rname, rlevel, rmembers)
       return "ERR: Invalid raid name"
     end
   else
-    local mdnum = 0
-    for num=1,127 do
-      local md = io.open("/dev/md"..tostring(num), "r")
-      if md == nil then
-        mdnum = num
-        break
-      else
-        io.close(md)
-      end
-    end
-    if mdnum == 0 then return "ERR: Cannot find proper md number" end
-    rname = "/dev/md"..mdnum
+    rname = d.find_free_md_device()
+    if rname == nil then return "ERR: Cannot find free md device" end
   end
 
   if rlevel == "5" or rlevel == "6" then
