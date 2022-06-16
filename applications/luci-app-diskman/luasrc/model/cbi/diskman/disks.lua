@@ -53,7 +53,7 @@ btn_eject.inputtitle = translate("Eject")
 btn_eject.forcewrite = true
 btn_eject.write = function(self, section, value)
   local dev = section
-  local disk_info = dm.get_disk_info(dev)
+  local disk_info = dm.get_disk_info(dev, true)
   if disk_info.p_table:match("Raid") then
     m.errmessage = translate("Unsupported raid reject!")
     return
