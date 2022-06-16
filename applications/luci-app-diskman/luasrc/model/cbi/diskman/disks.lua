@@ -43,7 +43,7 @@ d:option(DummyValue, "temp", translate("Temp"))
 d:option(DummyValue, "p_table", translate("Partition Table"))
 d:option(DummyValue, "sata_ver", translate("SATA Version"))
 -- d:option(DummyValue, "rota_rate", translate("Rotation Rate"))
-d:option(DummyValue, "health", translate("Health"))
+d:option(DummyValue, "health_status", translate("Health") .. "<br/>" .. translate("Status"))
 -- d:option(DummyValue, "status", translate("Status"))
 
 local btn_eject = d:option(Button, "_eject")
