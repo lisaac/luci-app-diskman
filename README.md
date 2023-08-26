@@ -10,6 +10,8 @@
 - [Download / 下载 ipk](https://github.com/lisaac/luci-app-diskman/releases)
 
 ## Depends / 依赖
+- luci-compat
+- luci-lib-ipkg
 - [parted](https://github.com/lisaac/luci-app-diskman/blob/master/Parted.Makefile)
 - blkid
 - smartmontools
