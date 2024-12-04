@@ -24,8 +24,11 @@
 
 ## Compile / 编译
 ``` bash
-mkdir -p package/luci-app-diskman && \
-wget https://raw.githubusercontent.com/lisaac/luci-app-diskman/master/applications/luci-app-diskman/Makefile -O package/luci-app-diskman/Makefile
+
+git clone https://github.com/lisaac/luci-app-diskman.git
+mv luci-app-diskman/applications/luci-app-diskman package/luci-app-diskman
+
+# 旧的 OpenWrt 可能需要额外添加 Parted.Makefile
 mkdir -p package/parted && \
 wget https://raw.githubusercontent.com/lisaac/luci-app-diskman/master/Parted.Makefile -O package/parted/Makefile
 
