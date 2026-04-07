@@ -108,11 +108,9 @@ end
 function smart_attr(dev)
   local attr = { }
   local dm = require "luci.model.diskman"
-  local cmd = io.popen(dm.command.smartctl ..  " -H -A -i /dev/%s" % dev)
-  if cmd then
-    local content = cmd:read("*all")
+  local content = dm.smartctl_output(dev, "-H -A -i")
+  if content and content ~= "" then
     local ln
-    cmd:close()
     if content:match("NVMe Version:")then
       for ln in string.gmatch(content,'[^\r\n]+') do
         if ln:match("^(.-):%s+(.+)") then
