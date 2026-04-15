@@ -893,5 +893,3 @@ d.format_partition = function(partition, fs)
 end
 
 return d
-
-
