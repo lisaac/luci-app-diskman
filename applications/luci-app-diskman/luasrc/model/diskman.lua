@@ -120,10 +120,9 @@ local function run_smartctl(device, devtype, options)
 end
 
 local function smartctl_success(output)
-  return output:match("START OF INFORMATION SECTION")
-    or output:match("START OF SMART DATA SECTION")
+  return output:match("START OF SMART DATA SECTION")
+    or output:match("START OF READ SMART DATA SECTION")
     or output:match("NVMe Version:")
-    or output:match("Serial Number:")
     or output:match("SMART Health Status:")
     or output:match("Device is in [A-Z]+ mode")
 end
@@ -171,14 +170,30 @@ local get_smart_info = function(device)
   local smart_info = {}
   for line in (d.smartctl_output(device, "-H -A -i -n standby -f brief") or ""):gmatch("[^\r\n]+") do
     local attrib, val
+    if not smart_info.health then
+      smart_info.health = line:match(".-overall%-health.-: (.+)")
+        or line:match("^SMART Health Status:%s*(.+)")
+    end
+    if not smart_info.temp then
+      local temp_id, temp_name, temp_raw
+      temp_id, temp_name, temp_raw = line:match("^%s*(%d+)%s+([%w_%-]+).-%s+([0-9]+)%s*%(")
+      if temp_id and (temp_id == "194" or temp_id == "190")
+        and (temp_name == "Temperature_Celsius" or temp_name == "Temperature" or temp_name == "Airflow_Temperature_Cel") then
+        smart_info.temp = temp_raw .. "°C"
+      else
+        temp_id, temp_name, temp_raw = line:match("^%s*(%d+)%s+([%w_%-]+).-%s+([0-9]+)%s*$")
+        if temp_id and (temp_id == "194" or temp_id == "190")
+          and (temp_name == "Temperature_Celsius" or temp_name == "Temperature" or temp_name == "Airflow_Temperature_Cel") then
+          smart_info.temp = temp_raw .. "°C"
+        end
+      end
+    end
     if section == 1 then
         attrib, val = line:match "^(.-):%s+(.+)"
     elseif section == 2 and smart_info.nvme_ver then
       attrib, val = line:match("^(.-):%s+(.+)")
-      if not smart_info.health then smart_info.health = line:match(".-overall%-health.-: (.+)") end
     elseif section == 2 then
       attrib, val = line:match("^([0-9 ]+)%s+[^ ]+%s+[POSRCK-]+%s+[0-9-]+%s+[0-9-]+%s+[0-9-]+%s+[0-9-]+%s+([0-9-]+)")
-      if not smart_info.health then smart_info.health = line:match(".-overall%-health.-: (.+)") end
     else
       attrib = line:match "^=== START OF (.*) SECTION ==="
       if attrib and attrib:match("INFORMATION") then
@@ -206,7 +221,11 @@ local get_smart_info = function(device)
     --   smart_info.logic_sec = smart_info.phy_sec
     elseif attrib == "Serial Number" then
       smart_info.sn = val
-    elseif attrib == "194" or attrib == "Temperature" then
+    elseif attrib == "194" or attrib == "Temperature_Celsius" or attrib == "Temperature" then
+      if val ~= "-" then
+        smart_info.temp = (val:match("(%d+)") or "?") .. "°C"
+      end
+    elseif attrib == "190" or attrib == "Airflow_Temperature_Cel" then
       if val ~= "-" then
         smart_info.temp = (val:match("(%d+)") or "?") .. "°C"
       end
@@ -874,3 +893,5 @@ d.format_partition = function(partition, fs)
 end
 
 return d
+
+
